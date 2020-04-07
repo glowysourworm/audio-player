@@ -7,6 +7,7 @@ using Avalonia.Threading;
 using ReactiveUI;
 
 using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 
@@ -23,6 +24,8 @@ namespace AudioPlayer.Model
         string _filteredAlbum;
 
         LibraryStatistics _statistics;
+
+        SortedObservableCollection<string, LibraryEntry> _selectedStatistic;
 
         public string ScanStatus
         {
@@ -45,12 +48,6 @@ namespace AudioPlayer.Model
             set { Update(ref _filteredAlbum, value); }
         }
 
-        public LibraryStatistics Statistics
-        {
-            get { return _statistics; }
-            set { Update(ref _statistics, value); }
-        }
-
         public IReactiveCommand OpenDirectoryCommand { get; set; }
 
         public event SimpleEventHandler OpenDirectoryEvent;
@@ -61,6 +58,14 @@ namespace AudioPlayer.Model
 
         public SortedObservableCollection<string, LibraryEntry> AllTitles { get; set; }
         public SortedObservableCollection<string, LibraryEntry> FilteredTitles { get; set; }
+
+        public ObservableCollection<LibraryStatistic> Statistics { get; set; }
+
+        public SortedObservableCollection<string, LibraryEntry> SelectedStatistic
+        { 
+            get { return _selectedStatistic; } 
+            set { Update(ref _selectedStatistic, value); }
+        }
         #endregion
 
         public Library()
@@ -71,13 +76,59 @@ namespace AudioPlayer.Model
 
             this.AllTitles = new SortedObservableCollection<string, LibraryEntry>(x => x.Title, true);
             this.FilteredTitles = new SortedObservableCollection<string, LibraryEntry>(x => x.Title, true);
-            this.Statistics = new LibraryStatistics();
+            this.Statistics = new ObservableCollection<LibraryStatistic>();
+
+            // Statistics
+            this.Statistics.Add(new LibraryStatistic("Files Scanned", x => x.FileName, x => true, false));
+            this.Statistics.Add(new LibraryStatistic("Files Valid", x => x.FileName, x => x.IsValid, false));
+            this.Statistics.Add(new LibraryStatistic("Complete Entries", x => x.FileName, x => x.IsComplete, false));
+
+            this.Statistics.Add(new LibraryStatistic("Album Unknown", x => x.FileName, 
+                                                                      x => x.IsUnknown(z => z.Album), 
+                                                                      false));
+
+            this.Statistics.Add(new LibraryStatistic("Album Artist Unknown", x => x.FileName,
+                                                                             x => x.IsUnknown(z => z.AlbumArtists),
+                                                                             false));
+
+            this.Statistics.Add(new LibraryStatistic("Genre Unknown", x => x.FileName,
+                                                                      x => x.IsUnknown(z => z.Genres),
+                                                                      false));
+
+            this.Statistics.Add(new LibraryStatistic("Lyrics Unknown", x => x.FileName,
+                                                                       x => x.IsUnknown(z => z.Lyrics),
+                                                                       false));
+
+            this.Statistics.Add(new LibraryStatistic("Title Unknown", x => x.FileName,
+                                                                      x => x.IsUnknown(z => z.Title),
+                                                                      false));
+
+            this.Statistics.Add(new LibraryStatistic("Year Unknown", x => x.FileName,
+                                                                     x => x.IsUnknown(z => z.Year),
+                                                                     false));
+
+            this.Statistics.Add(new LibraryStatistic("Track Unknown", x => x.FileName,
+                                                                      x => x.IsUnknown(z => z.Track),
+                                                                      false));
+
+            this.Statistics.Add(new LibraryStatistic("Track Count Unknown", x => x.FileName,
+                                                                            x => x.IsUnknown(z => z.TrackCount),
+                                                                            false));
+
+            this.Statistics.Add(new LibraryStatistic("Disc Unknown", x => x.FileName,
+                                                                     x => x.IsUnknown(z => z.Disc),
+                                                                     false));
+
+            this.Statistics.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName,
+                                                                            x => x.IsUnknown(z => z.DiscCount),
+                                                                            false));
 
             this.OpenDirectoryCommand = ReactiveCommand.Create(() =>
             {
                 if (this.OpenDirectoryEvent != null)
                     this.OpenDirectoryEvent();
             });
+
         }
 
         /// <summary>
@@ -93,7 +144,10 @@ namespace AudioPlayer.Model
             this.AllTitles.Clear();
             this.FilteredTitles.Clear();
             this.ScanStatus = GetScanStatus(0, 0);
-            this.Statistics.Clear();
+
+            // Reset statistics
+            foreach (var statistic in this.Statistics)
+                statistic.Clear();
 
             var scanner = new FileScanner();
 
@@ -131,25 +185,9 @@ namespace AudioPlayer.Model
                         else
                             this.FilteredTitles.Add(entry);
 
-                        // STATISTICS
-
-                        // File Scanned
-                        this.Statistics.TotalFilesScanned++;
-                        this.Statistics.TotalCompleteEntries += entry.IsComplete ? 1 : 0;
-                        this.Statistics.TotalFilesEmpty += entry.IsEmpty ? 1 : 0;
-                        this.Statistics.TotalFilesValid += entry.IsValid ? 1 : 0;
-
-                        // Field Unknown
-                        this.Statistics.TotalAlbumArtistUnknown += entry.IsUnknown(x => x.AlbumArtists) ? 1 : 0;
-                        this.Statistics.TotalAlbumUnknown += entry.IsUnknown(x => x.Album) ? 1 : 0;
-                        this.Statistics.TotalDiscCountUnknown += entry.IsUnknown(x => x.DiscCount) ? 1 : 0;
-                        this.Statistics.TotalDiscUnknown += entry.IsUnknown(x => x.Disc) ? 1 : 0;
-                        this.Statistics.TotalGenreUnknown += entry.IsUnknown(x => x.Genres) ? 1 : 0;
-                        this.Statistics.TotalLyricsUnknown += entry.IsUnknown(x => x.Lyrics) ? 1 : 0;
-                        this.Statistics.TotalTitleUnknown += entry.IsUnknown(x => x.Title) ? 1 : 0;
-                        this.Statistics.TotalTrackCountUnknown += entry.IsUnknown(x => x.TrackCount) ? 1 : 0;
-                        this.Statistics.TotalTrackUnknown += entry.IsUnknown(x => x.Track) ? 1 : 0;
-                        this.Statistics.TotalYearUnknown += entry.IsUnknown(x => x.Year) ? 1 : 0;
+                        // Update statistics
+                        foreach (var statistic in this.Statistics)
+                            statistic.FilteredAdd(entry);
                     }
 
                     // Update Scan Status

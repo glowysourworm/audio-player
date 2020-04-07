@@ -33,6 +33,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        
     </UserControl.Styles>
 
     <Grid>

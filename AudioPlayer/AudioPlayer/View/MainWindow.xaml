@@ -27,11 +27,11 @@
             <!-- Primary Tab Views -->
             <TabControl TabStripPlacement="Left" BorderBrush="Black" BorderThickness="0.5" Grid.Row="1">
 
-                <TabItem Header="Library Manager" Margin="0">
+                <TabItem Header="Library Manager" FontSize="14" Margin="0">
                     <local:ManagerView />
                 </TabItem>
 
-                <TabItem Header="Now Playing" Margin="0">
+                <TabItem Header="Now Playing" FontSize="14" Margin="0">
                     <local:NowPlayingView />
                 </TabItem>
 
