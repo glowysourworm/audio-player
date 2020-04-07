@@ -9,7 +9,7 @@ namespace AudioPlayer.Model
     [Serializable]
     public class LibraryEntry : ModelBase
     {
-        const string UNKNOWN = "Unknown";
+        const string UNKNOWN = "[Unknown]";
 
         string _fileName;
 
@@ -35,7 +35,6 @@ namespace AudioPlayer.Model
 
         bool _isEmpty; // tag field
         bool _isValid;
-        bool _isComplete;
 
         public string FileName
         {
@@ -120,6 +119,10 @@ namespace AudioPlayer.Model
         {
             get { return Format(string.Join(';', this.AlbumArtists)); }
         }
+        public string GenresJoined
+        {
+            get { return Format(string.Join(';', this.Genres)); }
+        }
 
         public bool IsValid
         {
@@ -177,6 +180,7 @@ namespace AudioPlayer.Model
             this.Year = copy.Year;
 
             this.RaisePropertyChanged("AlbumArtistsJoined");
+            this.RaisePropertyChanged("GenresJoined");
         }
 
         public bool IsUnknown<T>(Expression<Func<LibraryEntry, T>> propertyExpression)
@@ -250,6 +254,7 @@ namespace AudioPlayer.Model
                 this.IsValid = true;
 
                 this.RaisePropertyChanged("AlbumArtistsJoined");
+                this.RaisePropertyChanged("GenresJoined");
             }
             catch (Exception)
             {

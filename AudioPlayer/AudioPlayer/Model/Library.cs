@@ -10,20 +10,21 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
+using System.Threading;
 
 namespace AudioPlayer.Model
 {
     [Serializable]
     public class Library : ModelBase
     {
+        FileScanner _scanner;
+
         #region (public) Properties
         string _scanStatus;
 
         string _filteredGenre;
         string _filteredArtist;
         string _filteredAlbum;
-
-        LibraryStatistics _statistics;
 
         SortedObservableCollection<string, LibraryEntry> _selectedStatistic;
 
@@ -70,6 +71,8 @@ namespace AudioPlayer.Model
 
         public Library()
         {
+            _scanner = new FileScanner();
+
             this.ScanStatus = GetScanStatus(0, 0);
 
             this.Directories = new SortedObservableCollection<string, string>(x => x, false);
@@ -149,54 +152,31 @@ namespace AudioPlayer.Model
             foreach (var statistic in this.Statistics)
                 statistic.Clear();
 
-            var scanner = new FileScanner();
+            var counter = 0;
 
-            scanner.ScanUpdateEvent += (entriesCompleted, countCompleted, countTotal) =>
+            _scanner.FileScannedEvent += (entry, count) =>
             {
-                // Invoke UI thread -> Update bound collections
+                if (!entry.IsValid)
+                    return;
+
+                // Atomic increment
+                Interlocked.Increment(ref counter);
+
                 Dispatcher.UIThread.InvokeAsync(() =>
                 {
-                    // Completed entries - detached from scanner
-                    foreach (var entry in entriesCompleted.Where(x => x.IsValid).Actualize())
-                    {
-                        // TODO: HANDLE DUPLICATE ENTRIES
-                        if (this.AllTitles.Contains(entry))
-                            continue;
+                    // All Titles
+                    this.AllTitles.Add(entry);
 
-                        // All Titles
-                        this.AllTitles.Add(entry);
+                    // Statistics 
+                    foreach (var statistic in this.Statistics)
+                        statistic.FilteredAdd(entry);
 
-                        // Filtered By Genre
-                        if (!string.IsNullOrEmpty(_filteredGenre) &&
-                            entry.Genres.Contains(_filteredGenre))
-                            this.FilteredTitles.Add(entry);
+                    this.ScanStatus = GetScanStatus(counter, count);
 
-                        // Filtered By Artist
-                        else if (!string.IsNullOrEmpty(_filteredGenre) &&
-                            entry.Genres.Contains(_filteredGenre))
-                            this.FilteredTitles.Add(entry);
-
-                        // Filtered By Album
-                        else if (!string.IsNullOrEmpty(_filteredGenre) &&
-                            entry.Genres.Contains(_filteredGenre))
-                            this.FilteredTitles.Add(entry);
-
-                        // No Filter applied
-                        else
-                            this.FilteredTitles.Add(entry);
-
-                        // Update statistics
-                        foreach (var statistic in this.Statistics)
-                            statistic.FilteredAdd(entry);
-                    }
-
-                    // Update Scan Status
-                    this.ScanStatus = GetScanStatus(countCompleted, countTotal);
-
-                }, DispatcherPriority.MaxValue);
+                }, DispatcherPriority.Render);
             };
 
-            scanner.Scan(directories, "*.mp3");
+            _scanner.Scan(directories, "*.mp3");
         }
 
         private string GetScanStatus(int completed, int total)

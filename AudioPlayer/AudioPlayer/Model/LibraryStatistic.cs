@@ -9,7 +9,7 @@ namespace AudioPlayer.Model
 {
     public class LibraryStatistic : ModelBase
     {
-        readonly Func<LibraryEntry, object> _keySelector;
+        readonly Func<LibraryEntry, IComparable> _keySelector;
         readonly Func<LibraryEntry, bool> _statisticSelector;
 
         string _name;
@@ -19,10 +19,6 @@ namespace AudioPlayer.Model
             get { return _name; }
             set { Update(ref _name, value); }
         }
-
-        public event SimpleEventHandler<LibraryStatistic> LoadStatisticCollectionEvent;
-
-        public IReactiveCommand LoadCollectionCommand { get; set; }
 
         public SortedObservableCollection<IComparable, LibraryEntry> Collection { get; set; }
 
@@ -36,10 +32,6 @@ namespace AudioPlayer.Model
 
             this.Name = name;
             this.Collection = new SortedObservableCollection<IComparable, LibraryEntry>(keySelector, ignoreDuplicates);
-
-            this.LoadCollectionCommand = ReactiveCommand.Create(() =>
-            {
-            });
 
             this.RaisePropertyChanged("Collection");
         }
