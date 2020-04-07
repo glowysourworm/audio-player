@@ -22,6 +22,8 @@ namespace AudioPlayer.Model
         string _filteredArtist;
         string _filteredAlbum;
 
+        LibraryStatistics _statistics;
+
         public string ScanStatus
         {
             get { return _scanStatus; }
@@ -41,6 +43,12 @@ namespace AudioPlayer.Model
         {
             get { return _filteredAlbum; }
             set { Update(ref _filteredAlbum, value); }
+        }
+
+        public LibraryStatistics Statistics
+        {
+            get { return _statistics; }
+            set { Update(ref _statistics, value); }
         }
 
         public IReactiveCommand OpenDirectoryCommand { get; set; }
@@ -63,6 +71,7 @@ namespace AudioPlayer.Model
 
             this.AllTitles = new SortedObservableCollection<string, LibraryEntry>(x => x.Title, true);
             this.FilteredTitles = new SortedObservableCollection<string, LibraryEntry>(x => x.Title, true);
+            this.Statistics = new LibraryStatistics();
 
             this.OpenDirectoryCommand = ReactiveCommand.Create(() =>
             {
@@ -84,6 +93,7 @@ namespace AudioPlayer.Model
             this.AllTitles.Clear();
             this.FilteredTitles.Clear();
             this.ScanStatus = GetScanStatus(0, 0);
+            this.Statistics.Clear();
 
             var scanner = new FileScanner();
 
@@ -120,12 +130,32 @@ namespace AudioPlayer.Model
                         // No Filter applied
                         else
                             this.FilteredTitles.Add(entry);
+
+                        // STATISTICS
+
+                        // File Scanned
+                        this.Statistics.TotalFilesScanned++;
+                        this.Statistics.TotalCompleteEntries += entry.IsComplete ? 1 : 0;
+                        this.Statistics.TotalFilesEmpty += entry.IsEmpty ? 1 : 0;
+                        this.Statistics.TotalFilesValid += entry.IsValid ? 1 : 0;
+
+                        // Field Unknown
+                        this.Statistics.TotalAlbumArtistUnknown += entry.IsUnknown(x => x.AlbumArtists) ? 1 : 0;
+                        this.Statistics.TotalAlbumUnknown += entry.IsUnknown(x => x.Album) ? 1 : 0;
+                        this.Statistics.TotalDiscCountUnknown += entry.IsUnknown(x => x.DiscCount) ? 1 : 0;
+                        this.Statistics.TotalDiscUnknown += entry.IsUnknown(x => x.Disc) ? 1 : 0;
+                        this.Statistics.TotalGenreUnknown += entry.IsUnknown(x => x.Genres) ? 1 : 0;
+                        this.Statistics.TotalLyricsUnknown += entry.IsUnknown(x => x.Lyrics) ? 1 : 0;
+                        this.Statistics.TotalTitleUnknown += entry.IsUnknown(x => x.Title) ? 1 : 0;
+                        this.Statistics.TotalTrackCountUnknown += entry.IsUnknown(x => x.TrackCount) ? 1 : 0;
+                        this.Statistics.TotalTrackUnknown += entry.IsUnknown(x => x.Track) ? 1 : 0;
+                        this.Statistics.TotalYearUnknown += entry.IsUnknown(x => x.Year) ? 1 : 0;
                     }
 
                     // Update Scan Status
                     this.ScanStatus = GetScanStatus(countCompleted, countTotal);
 
-                }, DispatcherPriority.DataBind);
+                }, DispatcherPriority.MaxValue);
             };
 
             scanner.Scan(directories, "*.mp3");

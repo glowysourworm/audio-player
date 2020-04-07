@@ -1,0 +1,30 @@
+Audio Player (.NET Core)
+------------------------
+
+Goals:  
+
+	Cross Platform - Use Avalonia UI to target Windows / Linux
+	
+	Understand Audio Library - Use web services to complete tag data for audio files
+	
+	Complete Album Artwork - Gather image files into a custom file-based database for the
+							 audio player. Use database to de-populate / re-populate album
+							 artwork files.
+							 
+	Audio Player Database - Simple file-based database to organize audio files; and to be
+							able to re-populate a file tree based on some new orginization. This
+							includes album artwork.
+							
+							Also, complete tag / artwork data using web services to locate
+							missing information.
+							
+UI Layout:
+
+	Library Manager - Several lists of information by relevant tag. Statistics about which files
+					  have missing data, missing artwork, etc..
+					  
+					  Functions to work with populating some of the missing data using web services.
+					  
+					  Functions to de-populate / re-populate audio library files from database.
+					  
+	Now Playing - Simple music-bee (or) banshee like display to select songs to play / populate a playlist.

@@ -1,0 +1,127 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="AudioPlayer.View.ManagerView"
+             Margin="0">
+    <Grid>
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="400" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <ListBox>
+            <!-- Files Scanned -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Files Scanned:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalFilesScanned}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Complete -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Complete (Tag Fields):" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalCompleteEntries}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Valid -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Files Valid:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalFilesValid}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Empty -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Files Empty:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalFilesEmpty}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Album Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Album Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalAlbumUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Album Artist Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Album Artist Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalAlbumArtistUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Genre Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Genre Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalGenreUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Lyrics Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Lyrics Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalLyricsUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Title Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Title Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalTitleUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Year Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Year Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalYearUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Track Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Track Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalTrackUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Track Count Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Track Count Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalTrackCountUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Total Disc Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Disc Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalDiscUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+
+            <!-- Files Total Disc Count Unknown -->
+            <ListBoxItem>
+                <Grid>
+                    <TextBlock Text="Total Disc Count Unknown:" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding Statistics.TotalDiscCountUnknown}" HorizontalAlignment="Right" VerticalAlignment="Center" />
+                </Grid>
+            </ListBoxItem>
+        </ListBox>
+
+    </Grid>
+</UserControl>

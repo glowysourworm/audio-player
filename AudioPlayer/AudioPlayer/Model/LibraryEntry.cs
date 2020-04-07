@@ -1,6 +1,8 @@
 ﻿using AudioPlayer.Extension;
 using ReactiveUI;
 using System;
+using System.Linq.Expressions;
+using System.Reflection;
 
 namespace AudioPlayer.Model
 {
@@ -27,12 +29,13 @@ namespace AudioPlayer.Model
         uint _year;
         uint _track;
         uint _trackCount;
-        uint _disk;
-        uint _diskCount;
+        uint _disc;
+        uint _discCount;
         uint _beatsPerMinute;
 
         bool _isEmpty; // tag field
-        bool _isValid; 
+        bool _isValid;
+        bool _isComplete;
 
         public string FileName
         {
@@ -92,13 +95,13 @@ namespace AudioPlayer.Model
         }
         public uint Disc
         {
-            get { return _disk; }
-            set { Update(ref _disk, value); }
+            get { return _disc; }
+            set { Update(ref _disc, value); }
         }
         public uint DiscCount
         {
-            get { return _diskCount; }
-            set { Update(ref _diskCount, value); }
+            get { return _discCount; }
+            set { Update(ref _discCount, value); }
         }
         public uint BeatsPerMinute
         {
@@ -115,13 +118,29 @@ namespace AudioPlayer.Model
         // CALCULATED FIELDS
         public string AlbumArtistsJoined
         {
-            get { return string.Join(';', this.AlbumArtists); }
+            get { return Format(string.Join(';', this.AlbumArtists)); }
         }
 
         public bool IsValid
         {
             get { return _isValid; }
             set { Update(ref _isValid, value); }
+        }
+
+        public bool IsComplete
+        {
+            // TODO: Make these fields configurable
+            get
+            {
+                return !IsUnknown(x => x.Album) &&
+                       !IsUnknown(x => x.AlbumArtists) &&
+                       !IsUnknown(x => x.Disc) &&
+                       !IsUnknown(x => x.DiscCount) &&
+                       !IsUnknown(x => x.Lyrics) &&
+                       !IsUnknown(x => x.Title) &&
+                       !IsUnknown(x => x.Track) &&
+                       !IsUnknown(x => x.Year);
+            }
         }
 
         public LibraryEntry() { this.IsValid = false; }
@@ -160,6 +179,43 @@ namespace AudioPlayer.Model
             this.RaisePropertyChanged("AlbumArtistsJoined");
         }
 
+        public bool IsUnknown<T>(Expression<Func<LibraryEntry, T>> propertyExpression)
+        {
+            var expression = (MemberExpression)propertyExpression.Body;
+            var propertyInfo = (PropertyInfo)expression.Member;
+            var propertyValue = propertyInfo.GetValue(this);
+
+            // String
+            if (propertyValue is string)
+            {
+                if (string.IsNullOrWhiteSpace((string)propertyValue))
+                    return true;
+
+                else if ((string)propertyValue == UNKNOWN)
+                    return true;
+
+                else
+                    return false;
+            }
+
+            // Collections of strings
+            else if (propertyValue is SortedObservableCollection<string, string>)
+            {
+                var collection = propertyValue as SortedObservableCollection<string, string>;
+
+                return collection.Count == 0;
+            }
+
+            // uint
+            else if (propertyValue is uint)
+            {
+                return (uint)propertyValue <= 0;
+            }
+
+            else
+                throw new Exception("Unhandled unknown field type LibraryEntry.IsUnknown");
+        }
+
         private void Open(string file)
         {
             if (string.IsNullOrEmpty(file))
@@ -191,7 +247,7 @@ namespace AudioPlayer.Model
                 this.TrackCount = fileRef.Tag.TrackCount;
                 this.Year = fileRef.Tag.Year;
 
-                this.IsValid = fileRef.Tag.IsEmpty;
+                this.IsValid = true;
 
                 this.RaisePropertyChanged("AlbumArtistsJoined");
             }
