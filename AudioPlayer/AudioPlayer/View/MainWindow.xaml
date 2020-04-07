@@ -1,0 +1,82 @@
+﻿<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:AudioPlayer.ViewModels;assembly=AudioPlayer"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="AudioPlayer.View.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title=".NET Core Audio Player">
+
+    <Window.Styles>
+        <Style Selector="ListBox.PlaylistString">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="VirtualizationMode" Value="Simple" />
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding}" FontSize="14" />
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style Selector="ListBox.PlaylistEntry">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="VirtualizationMode" Value="Simple" />
+            <Setter Property="ItemTemplate">
+                <Setter.Value>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding AlbumArtistsJoined}" Margin="0, 0, 4, 0" FontSize="14" />
+                            <TextBlock Text=" - " Margin="0, 0, 4, 0" FontSize="14" />
+                            <TextBlock Text="{Binding Album}" Margin="0, 0, 4, 0" FontSize="14" />
+                            <TextBlock Text=" - " Margin="0, 0, 4, 0" FontSize="14" />
+                            <TextBlock Text="{Binding Title}" Margin="0, 0, 4, 0" FontSize="14" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Styles>
+
+    <Grid>
+    
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+      
+        <Grid.RowDefinitions>
+            <RowDefinition Height="22" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="400" />
+            <RowDefinition Height="28" />
+        </Grid.RowDefinitions>
+
+        <!-- Menu Bar -->
+        <Menu Grid.ColumnSpan="2" Background="Beige">
+            <MenuItem Header="_File">
+                <MenuItem Header="_Open Directory"
+                          Command="{Binding OpenDirectoryCommand}"
+                          ToolTip.Tip="Loads media library from selected folder" />
+            </MenuItem>
+        </Menu>
+
+        <!-- Artists -->
+        <ListBox Classes="PlaylistEntry" Items="{Binding AllTitles}" Grid.Row="1" Grid.RowSpan="2" />
+
+        <!-- Playlist -->
+        <ListBox Classes="PlaylistEntry" Items="{Binding FilteredTitles}" Grid.Row="2" Grid.Column="1" />
+
+        <!-- Status Panel -->
+        <Border Background="Beige" Grid.Row="3" Grid.ColumnSpan="2">
+            
+            <TextBlock Text="{Binding ScanStatus}" 
+                       Margin="5"
+                       HorizontalAlignment="Left" 
+                       VerticalAlignment="Center" />
+        </Border>
+    </Grid>    
+
+</Window>
