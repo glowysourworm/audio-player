@@ -61,7 +61,7 @@
                         Margin="0, 10, 0, 0"
                         Width="180" 
                         Height="180" >
-                    <Image />
+                    <Image Source="{Binding DownloadedArtwork}" />
                 </Border>
 
                 <!-- Tag Fields -->

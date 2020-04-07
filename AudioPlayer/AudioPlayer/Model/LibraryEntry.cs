@@ -1,8 +1,13 @@
-﻿using AudioPlayer.Extension;
+﻿using AudioPlayer.Constant;
+using AudioPlayer.Extension;
+using Avalonia.Media.Imaging;
+using IF.Lastfm.Core.Api;
 using ReactiveUI;
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading.Tasks;
+using TagLib;
 
 namespace AudioPlayer.Model
 {
@@ -11,12 +16,8 @@ namespace AudioPlayer.Model
     {
         const string UNKNOWN = "[Unknown]";
 
+        #region (private) Backing Fields
         string _fileName;
-
-        public SortedObservableCollection<string, string> AlbumArtists { get; set; }
-        public SortedObservableCollection<string, string> Composers { get; set; }
-        public SortedObservableCollection<string, string> Performers { get; set; }
-        public SortedObservableCollection<string, string> Genres { get; set; }
 
         string _album;
         string _comment;
@@ -36,6 +37,11 @@ namespace AudioPlayer.Model
         bool _isEmpty; // tag field
         bool _isValid;
 
+        Tag _originalTag;
+        Bitmap _downloadedArtwork;
+        #endregion
+
+        #region (public) Tag Fields
         public string FileName
         {
             get { return _fileName; }
@@ -114,7 +120,13 @@ namespace AudioPlayer.Model
             set { Update(ref _isEmpty, value); }
         }
 
-        // CALCULATED FIELDS
+        public SortedObservableCollection<string, string> AlbumArtists { get; set; }
+        public SortedObservableCollection<string, string> Composers { get; set; }
+        public SortedObservableCollection<string, string> Performers { get; set; }
+        public SortedObservableCollection<string, string> Genres { get; set; }
+        #endregion
+
+        #region (public) Calculated Properties
         public string AlbumArtistsJoined
         {
             get { return Format(string.Join(';', this.AlbumArtists)); }
@@ -123,13 +135,11 @@ namespace AudioPlayer.Model
         {
             get { return Format(string.Join(';', this.Genres)); }
         }
-
         public bool IsValid
         {
             get { return _isValid; }
             set { Update(ref _isValid, value); }
         }
-
         public bool IsComplete
         {
             // TODO: Make these fields configurable
@@ -145,6 +155,20 @@ namespace AudioPlayer.Model
                        !IsUnknown(x => x.Year);
             }
         }
+        #endregion
+
+        #region (public) API Properties
+        public Tag OriginalTag
+        {
+            get { return _originalTag; }
+            set { Update(ref _originalTag, value); }
+        }
+        public Bitmap DownloadedArtwork
+        {
+            get { return _downloadedArtwork; }
+            set { Update(ref _downloadedArtwork, value); }
+        }
+        #endregion
 
         public LibraryEntry() { this.IsValid = false; }
 
@@ -179,6 +203,10 @@ namespace AudioPlayer.Model
             this.TrackCount = copy.TrackCount;
             this.Year = copy.Year;
 
+            // TODO: Deep copy these
+            this.OriginalTag = copy.OriginalTag;
+            this.DownloadedArtwork = copy.DownloadedArtwork;
+
             this.RaisePropertyChanged("AlbumArtistsJoined");
             this.RaisePropertyChanged("GenresJoined");
         }
@@ -190,7 +218,7 @@ namespace AudioPlayer.Model
             var propertyValue = propertyInfo.GetValue(this);
 
             // String
-            if (propertyValue is string)
+            if (propertyInfo.PropertyType == typeof(string))
             {
                 if (string.IsNullOrWhiteSpace((string)propertyValue))
                     return true;
@@ -203,7 +231,7 @@ namespace AudioPlayer.Model
             }
 
             // Collections of strings
-            else if (propertyValue is SortedObservableCollection<string, string>)
+            else if (propertyInfo.PropertyType == typeof(SortedObservableCollection<string, string>))
             {
                 var collection = propertyValue as SortedObservableCollection<string, string>;
 
@@ -211,7 +239,7 @@ namespace AudioPlayer.Model
             }
 
             // uint
-            else if (propertyValue is uint)
+            else if (propertyInfo.PropertyType == typeof(uint))
             {
                 return (uint)propertyValue <= 0;
             }
@@ -252,6 +280,8 @@ namespace AudioPlayer.Model
                 this.Year = fileRef.Tag.Year;
 
                 this.IsValid = true;
+
+                this.OriginalTag = fileRef.Tag;
 
                 this.RaisePropertyChanged("AlbumArtistsJoined");
                 this.RaisePropertyChanged("GenresJoined");

@@ -1,7 +1,6 @@
 ﻿using AudioPlayer.Event;
 using AudioPlayer.Model;
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -30,11 +29,15 @@ namespace AudioPlayer.Component
             // Queue separately on the thread pool
             foreach (var file in files)
             {
-                ThreadPool.QueueUserWorkItem((parameters) =>
+                ThreadPool.QueueUserWorkItem(async (parameters) =>
                 {
+                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+
                     var array = (object[])parameters;
                     var entry = new LibraryEntry((string)array[0]);
                     var count = (int)array[1];
+
+                    entry.DownloadedArtwork = await LastFmClient.DownloadArtwork(entry);
 
                     if (this.FileScannedEvent != null)
                         this.FileScannedEvent(entry, count);
