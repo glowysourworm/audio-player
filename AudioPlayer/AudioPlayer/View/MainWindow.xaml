@@ -40,7 +40,7 @@
             <!-- Status Panel -->
             <Border Background="AntiqueWhite" Grid.Row="2" Margin="-5, 0, -5, -5">
 
-                <TextBlock Text="{Binding ScanStatus}"
+                <TextBlock Text="{Binding Status}"
                            Margin="7, 2, 7, 7"
                            HorizontalAlignment="Left"
                            VerticalAlignment="Center" />

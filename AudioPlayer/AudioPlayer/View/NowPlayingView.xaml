@@ -49,10 +49,10 @@
         </Grid.RowDefinitions>
 
         <!-- Artists -->
-        <ListBox Classes="PlaylistEntry" Items="{Binding AllTitles}" Grid.RowSpan="2" />
+        <ListBox Classes="PlaylistEntry" Items="{Binding Library.AllTitles}" Grid.RowSpan="2" />
 
         <!-- Playlist -->
-        <ListBox Classes="PlaylistEntry" Items="{Binding FilteredTitles}" Grid.Row="1" Grid.Column="1" />
+        <ListBox Classes="PlaylistEntry" Items="{Binding Library.AllTitles}" Grid.Row="1" Grid.Column="1" />
         
     </Grid>
 </UserControl>

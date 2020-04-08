@@ -1,18 +1,20 @@
-﻿using AudioPlayer.Constant;
-using AudioPlayer.Extension;
+﻿using AudioPlayer.Extension;
+
 using Avalonia.Media.Imaging;
-using IF.Lastfm.Core.Api;
+
 using ReactiveUI;
+
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
+
 using TagLib;
 
 namespace AudioPlayer.Model
 {
     [Serializable]
-    public class LibraryEntry : ModelBase
+    public class LibraryEntry : ModelBase, ISerializable
     {
         const string UNKNOWN = "Unknown";
 
@@ -38,7 +40,7 @@ namespace AudioPlayer.Model
         bool _isValid;
 
         Tag _originalTag;
-        Bitmap _downloadedArtwork;
+        Bitmap _artworkResolved;
         #endregion
 
         #region (public) Tag Fields
@@ -155,6 +157,15 @@ namespace AudioPlayer.Model
                        !IsUnknown(x => x.Year);
             }
         }
+
+        /// <summary>
+        /// Artwork resolved from one of any valid resource { tag pictures, album folder, web services }
+        /// </summary>
+        public Bitmap ArtworkResolved
+        {
+            get { return _artworkResolved; }
+            set { Update(ref _artworkResolved, value); }
+        }
         #endregion
 
         #region (public) API Properties
@@ -162,11 +173,6 @@ namespace AudioPlayer.Model
         {
             get { return _originalTag; }
             set { Update(ref _originalTag, value); }
-        }
-        public Bitmap DownloadedArtwork
-        {
-            get { return _downloadedArtwork; }
-            set { Update(ref _downloadedArtwork, value); }
         }
         #endregion
 
@@ -177,38 +183,68 @@ namespace AudioPlayer.Model
             Open(file);
         }
 
-        public LibraryEntry(LibraryEntry copy)
+        public LibraryEntry(SerializationInfo info, StreamingContext context)
         {
-            this.FileName = copy.FileName;
+            this.FileName = info.GetString("FileName");
 
-            this.AlbumArtists = new SortedObservableCollection<string, string>(copy.AlbumArtists, x => x, true);
-            this.Composers = new SortedObservableCollection<string, string>(copy.Composers, x => x, true);
-            this.Genres = new SortedObservableCollection<string, string>(copy.Genres, x => x, true);
-            this.Performers = new SortedObservableCollection<string, string>(copy.Performers, x => x, true);
+            this.AlbumArtists = (SortedObservableCollection<string, string>)info.GetValue("AlbumArtists", typeof(SortedObservableCollection<string, string>));
+            this.Composers = (SortedObservableCollection<string, string>)info.GetValue("Composers", typeof(SortedObservableCollection<string, string>));
+            this.Genres = (SortedObservableCollection<string, string>)info.GetValue("Genres", typeof(SortedObservableCollection<string, string>));
+            this.Performers = (SortedObservableCollection<string, string>)info.GetValue("Performers", typeof(SortedObservableCollection<string, string>));
 
-            this.Album = copy.Album;
-            this.BeatsPerMinute = copy.BeatsPerMinute;
-            this.Comment = copy.Comment;
-            this.Conductor = copy.Conductor;
-            this.Copyright = copy.Copyright;
-            this.Disc = copy.Disc;
-            this.DiscCount = copy.DiscCount;
-            this.FileName = copy.FileName;
-            this.Grouping = copy.Grouping;
-            this.IsEmpty = copy.IsEmpty;
-            this.IsValid = copy.IsValid;
-            this.Lyrics = copy.Lyrics;
-            this.Title = copy.Title;
-            this.Track = copy.Track;
-            this.TrackCount = copy.TrackCount;
-            this.Year = copy.Year;
+            this.Album = info.GetString("Album");
+            this.BeatsPerMinute = info.GetUInt32("BeatsPerMinute");
+            this.Comment = info.GetString("Comment");
+            this.Conductor = info.GetString("Conductor");
+            this.Copyright = info.GetString("Copyright");
+            this.Disc = info.GetUInt32("Disc");
+            this.DiscCount = info.GetUInt32("DiscCount");
+            this.Grouping = info.GetString("Grouping");
+            this.IsEmpty = info.GetBoolean("IsEmpty");
+            this.IsValid = info.GetBoolean("IsValid");
+            this.Lyrics = info.GetString("Lyrics");
+            this.Title = info.GetString("Title");
+            this.Track = info.GetUInt32("Track");
+            this.TrackCount = info.GetUInt32("TrackCount");
+            this.Year = info.GetUInt32("Year");
 
-            // TODO: Deep copy these
-            this.OriginalTag = copy.OriginalTag;
-            this.DownloadedArtwork = copy.DownloadedArtwork;
+            try
+            {
+                this.OriginalTag = TagLib.File.Create(this.FileName).Tag;
+            }
+            catch (Exception)
+            {
+                this.OriginalTag = null;
+                this.IsValid = false;
+            }
 
-            this.RaisePropertyChanged("AlbumArtistsJoined");
-            this.RaisePropertyChanged("GenresJoined");
+            OnCalculatedFieldsChanged();
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("FileName", this.FileName);
+
+            info.AddValue("AlbumArtists", this.AlbumArtists);
+            info.AddValue("Composers", this.Composers);
+            info.AddValue("Genres", this.Genres);
+            info.AddValue("Performers", this.Performers);
+
+            info.AddValue("Album", this.Album);
+            info.AddValue("BeatsPerMinute", this.BeatsPerMinute);
+            info.AddValue("Comment", this.Comment);
+            info.AddValue("Conductor", this.Conductor);
+            info.AddValue("Copyright", this.Copyright);
+            info.AddValue("Disc", this.Disc);
+            info.AddValue("DiscCount", this.DiscCount);
+            info.AddValue("Grouping", this.Grouping);
+            info.AddValue("IsEmpty", this.IsEmpty);
+            info.AddValue("IsValid", this.IsValid);
+            info.AddValue("Lyrics", this.Lyrics);
+            info.AddValue("Title", this.Title);
+            info.AddValue("Track", this.Track);
+            info.AddValue("TrackCount", this.TrackCount);
+            info.AddValue("Year", this.Year);
         }
 
         public bool IsUnknown<T>(Expression<Func<LibraryEntry, T>> propertyExpression)
@@ -263,7 +299,7 @@ namespace AudioPlayer.Model
                 this.Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers, x => x, true);
                 this.Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres, x => x, true);
                 this.Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers, x => x, true);
-                
+
                 this.Album = Format(fileRef.Tag.Album);
                 this.BeatsPerMinute = fileRef.Tag.BeatsPerMinute;
                 this.Comment = Format(fileRef.Tag.Comment);
@@ -283,8 +319,7 @@ namespace AudioPlayer.Model
 
                 this.OriginalTag = fileRef.Tag;
 
-                this.RaisePropertyChanged("AlbumArtistsJoined");
-                this.RaisePropertyChanged("GenresJoined");
+                OnCalculatedFieldsChanged();
             }
             catch (Exception)
             {
@@ -295,6 +330,13 @@ namespace AudioPlayer.Model
         private string Format(string tagField)
         {
             return string.IsNullOrWhiteSpace(tagField) ? UNKNOWN : tagField;
+        }
+
+        private void OnCalculatedFieldsChanged()
+        {
+            this.RaisePropertyChanged("AlbumArtistsJoined");
+            this.RaisePropertyChanged("GenresJoined");
+            this.RaisePropertyChanged("IsComplete");
         }
     }
 }

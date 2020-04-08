@@ -30,7 +30,7 @@ namespace AudioPlayer.Component
 
                     // Web Call ...
                     var response = await client.Album.GetInfoAsync(entry.AlbumArtists[0], entry.Album, true);
-
+                    
                     // Status OK -> Create bitmap image from the url
                     if (response.Status == LastResponseStatus.Successful)
                         return await DownloadImage(response.Content.Images.ExtraLarge.AbsoluteUri);

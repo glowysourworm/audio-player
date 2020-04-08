@@ -14,25 +14,7 @@ namespace AudioPlayer.View
 #if DEBUG
             this.AttachDevTools();
 #endif
-
-            // DEBUG MP3 DATA
-            var library = new Library();
-
-            library.OpenDirectoryEvent += async () =>
-            {
-                var dialog = new OpenFolderDialog();
-
-                var result = await dialog.ShowAsync(this);
-
-                if (!string.IsNullOrEmpty(result))
-                {
-                    var directories = new string[] { result };
-
-                    library.Open(directories);
-                }
-            };
-
-            this.DataContext = library;
+            this.DataContext = new LibraryManager();
         }
 
         private void InitializeComponent()

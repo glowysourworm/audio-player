@@ -4,6 +4,7 @@ using AudioPlayer.Model;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AudioPlayer.Component
 {
@@ -31,16 +32,14 @@ namespace AudioPlayer.Component
             {
                 ThreadPool.QueueUserWorkItem(async (parameters) =>
                 {
-                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
-
                     var array = (object[])parameters;
                     var entry = new LibraryEntry((string)array[0]);
                     var count = (int)array[1];
 
-                    entry.DownloadedArtwork = await LastFmClient.DownloadArtwork(entry);
-
                     if (this.FileScannedEvent != null)
                         this.FileScannedEvent(entry, count);
+
+                    await Task.Delay(1);
 
                 }, new object[] { file, files.Count });
             }
