@@ -159,6 +159,15 @@ namespace AudioPlayer.Model
         }
 
         /// <summary>
+        /// TODO: CHANGE THIS - Used to share artwork for an album. This needs a better
+        ///       unique ID.
+        /// </summary>
+        public string ArtworkKey
+        {
+            get { return this.Album + this.AlbumArtistsJoined; }
+        }
+
+        /// <summary>
         /// Artwork resolved from one of any valid resource { tag pictures, album folder, web services }
         /// </summary>
         public Bitmap ArtworkResolved
@@ -317,7 +326,7 @@ namespace AudioPlayer.Model
 
                 this.IsValid = true;
 
-                this.OriginalTag = fileRef.Tag;
+                // this.OriginalTag = fileRef.Tag;
 
                 OnCalculatedFieldsChanged();
             }
@@ -337,6 +346,7 @@ namespace AudioPlayer.Model
             this.RaisePropertyChanged("AlbumArtistsJoined");
             this.RaisePropertyChanged("GenresJoined");
             this.RaisePropertyChanged("IsComplete");
+            this.RaisePropertyChanged("ArtworkKey");
         }
     }
 }

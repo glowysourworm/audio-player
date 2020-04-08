@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Security.Cryptography;
 
@@ -18,9 +19,12 @@ namespace AudioPlayer.Model.Database
         // LibraryEntry <- N-1 -> Bitmap
         // Bitmaps stored separately
 
+
+        // LibraryEntry.FileName -> LibraryEntry
         readonly Dictionary<string, LibraryEntry> _entries;
-        readonly Dictionary<string, string> _artworkPointers;
-        readonly Dictionary<string, byte[]> _artwork;
+
+        // LibraryEntry.ArtworkKey -> Artwork buffer (Bitmap)
+        readonly Dictionary<string, Bitmap> _artwork;
 
         public IEnumerable<LibraryEntry> Entries
         {
@@ -30,24 +34,27 @@ namespace AudioPlayer.Model.Database
         public LibraryFile()
         {
             _entries = new Dictionary<string, LibraryEntry>();
-            _artworkPointers = new Dictionary<string, string>();
-            _artwork = new Dictionary<string, byte[]>();
+            _artwork = new Dictionary<string, Bitmap>();
         }
 
         public LibraryFile(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("Entries", _entries);
-            info.AddValue("ArtworkPointers", _artworkPointers);
-            info.AddValue("Artwork", _artwork);
+            _entries = (Dictionary<string, LibraryEntry>)info.GetValue("Entries", typeof(Dictionary<string, LibraryEntry>));
+
+            // Deserialize artwork
+            var artwork = (Dictionary<string, byte[]>)info.GetValue("Artwork", typeof(Dictionary<string, byte[]>));
+
+            _artwork = artwork.ToDictionary(x => x.Key, x => Deserialize(x.Value));
 
             OpenArtwork();
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.GetValue("Entries", typeof(Dictionary<string, LibraryEntry>));
-            info.GetValue("ArtworkPointers", typeof(Dictionary<string, string>));
-            info.GetValue("Artwork", typeof(Dictionary<string, byte[]>));
+            info.AddValue("Entries", _entries);
+
+            // Serialize to Dictionary<string, byte[]>
+            info.AddValue("Artwork", _artwork.ToDictionary(x => x.Key, x => Serialize(x.Value)));
         }
 
         /// <summary>
@@ -55,18 +62,24 @@ namespace AudioPlayer.Model.Database
         /// </summary>
         private void OpenArtwork()
         {
-            foreach (var pointerKey in _artworkPointers.Keys)
+            foreach (var element in _artwork)
             {
-                var entry = _entries[pointerKey];
-                var artworkBuffer = _artwork[_artworkPointers[pointerKey]];
-
-                using (var stream = new MemoryStream(artworkBuffer))
+                foreach (var entry in _entries.Values)
                 {
-                    stream.Seek(0, SeekOrigin.Begin);
-
-                    entry.ArtworkResolved = new Bitmap(stream);
+                    if (entry.ArtworkKey == element.Key)
+                        entry.ArtworkResolved = element.Value;
                 }
             }
+        }
+
+        public bool ContainsArtwork(LibraryEntry entry)
+        {
+            return _artwork.ContainsKey(entry.ArtworkKey);
+        }
+
+        public Bitmap GetArtwork(string artworkKey)
+        {
+            return _artwork[artworkKey];
         }
 
         public void AddEntry(LibraryEntry entry)
@@ -74,20 +87,15 @@ namespace AudioPlayer.Model.Database
             _entries.Add(entry.FileName, entry);
         }
 
-        public void AddArtwork(LibraryEntry entry, Bitmap image)
+        public void AddArtwork(string artworkKey, Bitmap image)
         {
-            string fingerPrint = "";
-
-            var buffer = Serialize(image, out fingerPrint);
-
-            if (!_artworkPointers.ContainsKey(entry.FileName))
-                _artworkPointers.Add(entry.FileName, fingerPrint);
-
-            if (!_artwork.ContainsKey(fingerPrint))
-                _artwork.Add(fingerPrint, buffer);
+            if (!_artwork.ContainsKey(artworkKey))
+            {
+                _artwork.Add(artworkKey, image);
+            }
         }
 
-        private byte[] Serialize(Bitmap image, out string fingerprint)
+        private byte[] Serialize(Bitmap image)
         {
             using (var stream = new MemoryStream())
             {
@@ -97,10 +105,15 @@ namespace AudioPlayer.Model.Database
                 // Fetch buffer from stream
                 var buffer = stream.GetBuffer();
 
-                // Compute MD5 Checksum -> Convert to string
-                fingerprint = BitConverter.ToString(MD5.Create().ComputeHash(buffer));
-
                 return buffer;
+            }
+        }
+
+        private Bitmap Deserialize(byte[] buffer)
+        {
+            using (var stream = new MemoryStream(buffer))
+            {
+                return new Bitmap(stream);
             }
         }
     }

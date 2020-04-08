@@ -5,64 +5,65 @@ using AudioPlayer.Model.Database;
 using Avalonia.Threading;
 
 using System;
+using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
-using System.Threading;
+using System.Threading.Tasks;
 
 namespace AudioPlayer.Component
 {
     public static class LibraryLoader
     {
-        public static Library Load(string[] directories, Action<string> statusUpdate)
+        public static async Task<LibraryFile> Load(string[] directories)
         {
-            var library = new Library();
-            var scanner = new FileScanner();
+            var libraryFile = new LibraryFile();
 
-            // Create new library directories
-            library.Directories.ReCreate(directories.Distinct());
-
-            var counter = 0;
-
-            scanner.FileScannedEvent += (entry, count) =>
+            // Scan directories for files
+            var files = directories.SelectMany(directory =>
             {
-                // Atomic increment
-                Interlocked.Increment(ref counter);
+                return Directory.GetFiles(directory, "*.mp3", SearchOption.AllDirectories);
 
-                if (!entry.IsValid)
-                    return;
+            }).ToList();
 
-                Dispatcher.UIThread.InvokeAsync(() =>
+            var entries = new ConcurrentBag<LibraryEntry>();
+
+            // Use TPL to create library entries
+            Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, (file) =>
+            {
+                // Generate entry
+                var entry = new LibraryEntry(file);
+
+                // Keep track of completed entries 
+                entries.Add(entry);
+            });
+
+            // Signal UI Thread with update
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                foreach (var entry in entries)
                 {
-                    library.Add(entry);
+                    // Add entry to the library
+                    //
+                    // TODO: HANDLE INVALID ENTRIES
+                    if (entry.IsValid)
+                        libraryFile.AddEntry(entry);
+                }
+            });
 
-                    statusUpdate(string.Format("Scanned {0} of {1} files...", counter, count));
-
-                }, DispatcherPriority.MaxValue);
-            };
-
-            scanner.Scan(directories, "*.mp3");
-
-            return library;
+            return libraryFile;
         }
 
-        public static Library Load(string libraryFileName)
+        public static LibraryFile Load(string libraryFileName)
         {
             try
             {
                 // Load library database
-                var libraryFile = Serializer.Deserialize<LibraryFile>(libraryFileName);
-
-                // Load library from the database
-                return new Library(libraryFile);
+                return Serializer.Deserialize<LibraryFile>(libraryFileName);
             }
             catch (Exception)
             {
-                return null;
+                return new LibraryFile();
             }
-        }
-
-        private static string GetScanStatus(int completed, int total)
-        {
-            return string.Format("({0} of {1}) files scanned...", completed, total);
         }
     }
 }

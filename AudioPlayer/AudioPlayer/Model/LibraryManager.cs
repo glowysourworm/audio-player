@@ -38,7 +38,20 @@ namespace AudioPlayer.Model
                 {
                     var directories = new string[] { result };
 
-                    this.Library = LibraryLoader.Load(directories, (status) => this.Status = status);
+                    this.Status = "Scanning library files...";
+
+                    // Scan files and create library
+                    var libraryFile = await LibraryLoader.Load(directories);
+
+                    this.Status = "Searching for album artwork...";
+
+                    // Resolve artwork
+                    await LibraryArtworkLoader.Load(libraryFile);
+
+                    // Load Library from library file
+                    this.Library = new Library(libraryFile);
+
+                    this.Status = "Library Ready!";
                 }
             });
         }

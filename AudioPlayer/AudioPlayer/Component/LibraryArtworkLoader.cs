@@ -1,8 +1,7 @@
-﻿using AudioPlayer.Model;
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading;
+﻿using AudioPlayer.Extension;
+using AudioPlayer.Model.Database;
+
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AudioPlayer.Component
@@ -12,36 +11,42 @@ namespace AudioPlayer.Component
         /// <summary>
         /// Attempts to load album artwork from { tag pictures, album folder, web services }
         /// </summary>
-        public static void Load(Library library)
+        public static async Task Load(LibraryFile libraryFile)
         {
-            foreach (var entry in library.AllTitles)
+            // Create specific artwork keys for download
+            var artworkGrouping = libraryFile.Entries
+                                             .GroupBy(entry => entry.ArtworkKey)
+                                             .Actualize();
+
+            // Create tasks for downloading the artwork
+            var tasks = artworkGrouping.Select(async group =>
             {
-                ThreadPool.QueueUserWorkItem(async (parameters) =>
+                // Tag Pictures (TODO)
+
+                // Album Folder (TODO)
+
+                // Web Services
+                //
+                // 1) LastFm
+                // 2) ...
+                //
+
+                // Attemp to download artwork
+                var artwork = await LastFmClient.DownloadArtwork(group.First());
+
+                if (artwork != null)
                 {
-                    Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+                    // Add distinct artwork to library by "Artwork Key"
+                    libraryFile.AddArtwork(group.Key, artwork);
 
-                    var array = (object[])parameters;
-                    var entry = (LibraryEntry)array[0];
+                    // Set all references in the group
+                    foreach (var entry in group)
+                        entry.ArtworkResolved = libraryFile.GetArtwork(entry.ArtworkKey);
+                }
+            });
 
-                    // Tag Pictures (TODO)
-
-                    // Album Folder (TODO)
-
-                    // Web Services
-                    //
-                    // 1) LastFm
-                    // 2) ...
-                    //
-
-                    var image = await LastFmClient.DownloadArtwork(entry);
-
-                    if (image != null)
-                        entry.ArtworkResolved = image;
-
-                    await Task.Delay(5);
-
-                }, new object[] { entry });
-            }
+            // Finish web service calls
+            await Task.WhenAll(tasks);
         }
     }
 }

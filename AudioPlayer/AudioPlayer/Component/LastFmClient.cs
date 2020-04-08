@@ -7,6 +7,7 @@ using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Api.Enums;
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +33,8 @@ namespace AudioPlayer.Component
                     var response = await client.Album.GetInfoAsync(entry.AlbumArtists[0], entry.Album, true);
                     
                     // Status OK -> Create bitmap image from the url
-                    if (response.Status == LastResponseStatus.Successful)
+                    if (response.Status == LastResponseStatus.Successful &&
+                        response.Content.Images.Any())
                         return await DownloadImage(response.Content.Images.ExtraLarge.AbsoluteUri);
 
                     else
