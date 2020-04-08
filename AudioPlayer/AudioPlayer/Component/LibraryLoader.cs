@@ -14,7 +14,7 @@ namespace AudioPlayer.Component
 {
     public static class LibraryLoader
     {
-        public static async Task<LibraryFile> Load(string[] directories)
+        public static LibraryFile Load(string[] directories)
         {
             var libraryFile = new LibraryFile();
 
@@ -28,7 +28,7 @@ namespace AudioPlayer.Component
             var entries = new ConcurrentBag<LibraryEntry>();
 
             // Use TPL to create library entries
-            Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, (file) =>
+            Parallel.ForEach(files, /* new ParallelOptions() { MaxDegreeOfParallelism = 4 }, */ (file) =>
             {
                 // Generate entry
                 var entry = new LibraryEntry(file);
@@ -37,18 +37,14 @@ namespace AudioPlayer.Component
                 entries.Add(entry);
             });
 
-            // Signal UI Thread with update
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            foreach (var entry in entries)
             {
-                foreach (var entry in entries)
-                {
-                    // Add entry to the library
-                    //
-                    // TODO: HANDLE INVALID ENTRIES
-                    if (entry.IsValid)
-                        libraryFile.AddEntry(entry);
-                }
-            });
+                // Add entry to the library
+                //
+                // TODO: HANDLE INVALID ENTRIES
+                if (entry.IsValid)
+                    libraryFile.AddEntry(entry);
+            }
 
             return libraryFile;
         }

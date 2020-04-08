@@ -99,6 +99,10 @@ namespace AudioPlayer.Model
             this.Statistics.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName,
                                                                             x => x.IsUnknown(z => z.DiscCount),
                                                                             false));
+
+            this.Statistics.Add(new LibraryStatistic("Artwork Found", x => x.FileName,
+                                                                      x => x.ArtworkResolved != null,
+                                                                      false));
         }
     }
 }

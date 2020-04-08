@@ -1,8 +1,9 @@
 ﻿using AudioPlayer.Component;
-
+using AudioPlayer.Model.Database;
 using Avalonia.Controls;
 
 using ReactiveUI;
+using System.Threading.Tasks;
 
 namespace AudioPlayer.Model
 {
@@ -34,25 +35,36 @@ namespace AudioPlayer.Model
 
                 var result = await dialog.ShowAsync(App.MainWindow);
 
-                if (!string.IsNullOrEmpty(result))
+                if (string.IsNullOrEmpty(result))
+                    return;
+
+                this.Status = "Scanning library files...";
+
+                // Scan files and create library
+                var preliminaryLibrary = await Task.Run(() =>
                 {
                     var directories = new string[] { result };
+                   
+                    return LibraryLoader.Load(directories);
+                });
 
-                    this.Status = "Scanning library files...";
+                // Load Library from library file
+                this.Library = new Library(preliminaryLibrary);
 
-                    // Scan files and create library
-                    var libraryFile = await LibraryLoader.Load(directories);
+                this.Status = "Searching for album artwork...";
 
-                    this.Status = "Searching for album artwork...";
+                // Resolve artwork
+                var completedLibrary = await Task.Run(() =>
+                {
+                    LibraryArtworkLoader.Load(preliminaryLibrary);
 
-                    // Resolve artwork
-                    await LibraryArtworkLoader.Load(libraryFile);
+                    return preliminaryLibrary;
+                });
 
-                    // Load Library from library file
-                    this.Library = new Library(libraryFile);
+                // Load Library from library file
+                this.Library = new Library(completedLibrary);
 
-                    this.Status = "Library Ready!";
-                }
+                this.Status = "Library Ready!";
             });
         }
     }

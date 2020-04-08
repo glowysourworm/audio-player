@@ -1,6 +1,7 @@
 ﻿using AudioPlayer.Extension;
 using AudioPlayer.Model.Database;
-
+using Avalonia.Media.Imaging;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -11,15 +12,17 @@ namespace AudioPlayer.Component
         /// <summary>
         /// Attempts to load album artwork from { tag pictures, album folder, web services }
         /// </summary>
-        public static async Task Load(LibraryFile libraryFile)
+        public static void Load(LibraryFile libraryFile)
         {
             // Create specific artwork keys for download
             var artworkGrouping = libraryFile.Entries
                                              .GroupBy(entry => entry.ArtworkKey)
                                              .Actualize();
 
+            var artworkDict = new ConcurrentDictionary<string, Bitmap>();
+
             // Create tasks for downloading the artwork
-            var tasks = artworkGrouping.Select(async group =>
+            Parallel.ForEach(artworkGrouping, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, group =>
             {
                 // Tag Pictures (TODO)
 
@@ -32,21 +35,31 @@ namespace AudioPlayer.Component
                 //
 
                 // Attemp to download artwork
-                var artwork = await LastFmClient.DownloadArtwork(group.First());
+                var artworkTask = LastFmClient.DownloadArtwork(group.First());
 
-                if (artwork != null)
+                // Run task
+                artworkTask.Wait();
+
+                // Add to artwork result
+                if (artworkTask.Result != null)
+                    artworkDict.TryAdd(group.Key, artworkTask.Result);
+            });
+
+            // Distribute results
+            foreach (var element in artworkDict)
+            {
+                // Add distinct artwork to library by "Artwork Key"
+                libraryFile.AddArtwork(element.Key, element.Value);
+
+                // Set all references in the library file
+                var group = artworkGrouping.FirstOrDefault(x => x.Key == element.Key);
+
+                if (group != null)
                 {
-                    // Add distinct artwork to library by "Artwork Key"
-                    libraryFile.AddArtwork(group.Key, artwork);
-
-                    // Set all references in the group
                     foreach (var entry in group)
                         entry.ArtworkResolved = libraryFile.GetArtwork(entry.ArtworkKey);
                 }
-            });
-
-            // Finish web service calls
-            await Task.WhenAll(tasks);
+            }
         }
     }
 }
