@@ -79,6 +79,12 @@
                         <TextBlock Classes="TagField" Text="{Binding AlbumArtistsJoined}" HorizontalAlignment="Right" />
                     </Grid>
 
+                    <!-- Genre(s) -->
+                    <Grid Margin="5" HorizontalAlignment="Stretch">
+                        <TextBlock Classes="TagField" Text="Genre(s)" HorizontalAlignment="Left" />
+                        <TextBlock Classes="TagField" Text="{Binding GenresJoined}" HorizontalAlignment="Right" />
+                    </Grid>
+
                     <!-- Album -->
                     <Grid Margin="5" HorizontalAlignment="Stretch">
                         <TextBlock Classes="TagField" Text="Album" HorizontalAlignment="Left" />

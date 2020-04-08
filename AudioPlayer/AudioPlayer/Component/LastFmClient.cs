@@ -23,17 +23,25 @@ namespace AudioPlayer.Component
 
             else
             {
-                // Last FM API
-                var client = new LastfmClient(WebConfiguration.LastFmAPIKey, WebConfiguration.LastFmAPISecret);
+                try
+                {
+                    // Last FM API
+                    var client = new LastfmClient(WebConfiguration.LastFmAPIKey, WebConfiguration.LastFmAPISecret);
 
-                // Web Call ...
-                var response = await client.Album.GetInfoAsync(entry.AlbumArtists[0], entry.Album, true);
+                    // Web Call ...
+                    var response = await client.Album.GetInfoAsync(entry.AlbumArtists[0], entry.Album, true);
 
-                // Status OK -> Create bitmap image from the url
-                if (response.Status == LastResponseStatus.Successful)
-                    return await DownloadImage(response.Content.Images.ExtraLarge.AbsoluteUri);
+                    // Status OK -> Create bitmap image from the url
+                    if (response.Status == LastResponseStatus.Successful)
+                        return await DownloadImage(response.Content.Images.ExtraLarge.AbsoluteUri);
 
-                return await Task.FromResult<Bitmap>(null);
+                    else
+                        return await Task.FromResult<Bitmap>(null);
+                }
+                catch (Exception)
+                {
+                    return await Task.FromResult<Bitmap>(null);
+                }
             }
         }
 

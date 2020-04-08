@@ -162,35 +162,40 @@ namespace AudioPlayer.Extension
 
         int BinarySearch(T searchItem, int lowerIndex, int upperIndex)
         {
-            // Check to see whether list contains item
-            if (lowerIndex == upperIndex)
-                return lowerIndex;
-
             // Choose the middle index to compare
             var middleIndex = (int)Math.Floor((upperIndex + lowerIndex) / 2.0);
-
-            // Check to see whether middle falls on the end (floor)
-            if (middleIndex == lowerIndex)
-                return middleIndex;
 
             // Perform key comparison
             var comparison = Compare(searchItem, _list[middleIndex]);
 
             if (comparison < 0)
             {
-                return BinarySearch(searchItem, lowerIndex, middleIndex);
+                // Single item left
+                if (lowerIndex == upperIndex)
+                    return middleIndex;
+
+                // Truncated to lower index
+                else if (middleIndex == lowerIndex)
+                    return middleIndex;
+
+                return BinarySearch(searchItem, lowerIndex, middleIndex - 1);
             }
             else if (comparison == 0)
             {
                 if (!_ignoreDuplicates)
                     throw new Exception("Duplicate key found SortedObservableCollection");
 
+                // Match found - insert after
                 else
-                    return middleIndex;
+                    return middleIndex + 1;
             }
             else
             {
-                return BinarySearch(searchItem, middleIndex, upperIndex);
+                // Single item left
+                if (lowerIndex == upperIndex)
+                    return middleIndex + 1;
+
+                return BinarySearch(searchItem, middleIndex + 1, upperIndex);
             }
         }
 

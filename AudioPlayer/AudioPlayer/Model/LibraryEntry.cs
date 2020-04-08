@@ -14,7 +14,7 @@ namespace AudioPlayer.Model
     [Serializable]
     public class LibraryEntry : ModelBase
     {
-        const string UNKNOWN = "[Unknown]";
+        const string UNKNOWN = "Unknown";
 
         #region (private) Backing Fields
         string _fileName;
