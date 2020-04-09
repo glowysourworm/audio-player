@@ -1,6 +1,5 @@
 ﻿using AudioPlayer.Extension;
-
-using Avalonia.Media.Imaging;
+using AudioPlayer.Model.Database;
 
 using ReactiveUI;
 
@@ -40,7 +39,7 @@ namespace AudioPlayer.Model
         bool _isValid;
 
         Tag _originalTag;
-        Bitmap _artworkResolved;
+        SerializableBitmap _artworkResolved;
         #endregion
 
         #region (public) Tag Fields
@@ -170,18 +169,10 @@ namespace AudioPlayer.Model
         /// <summary>
         /// Artwork resolved from one of any valid resource { tag pictures, album folder, web services }
         /// </summary>
-        public Bitmap ArtworkResolved
+        public SerializableBitmap ArtworkResolved
         {
             get { return _artworkResolved; }
             set { Update(ref _artworkResolved, value); }
-        }
-        #endregion
-
-        #region (public) API Properties
-        public Tag OriginalTag
-        {
-            get { return _originalTag; }
-            set { Update(ref _originalTag, value); }
         }
         #endregion
 
@@ -217,15 +208,7 @@ namespace AudioPlayer.Model
             this.TrackCount = info.GetUInt32("TrackCount");
             this.Year = info.GetUInt32("Year");
 
-            try
-            {
-                this.OriginalTag = TagLib.File.Create(this.FileName).Tag;
-            }
-            catch (Exception)
-            {
-                this.OriginalTag = null;
-                this.IsValid = false;
-            }
+            // TODO: Validate Library Entry is on file and correct
 
             OnCalculatedFieldsChanged();
         }
@@ -304,10 +287,10 @@ namespace AudioPlayer.Model
             {
                 var fileRef = TagLib.File.Create(file);
 
-                this.AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists, x => x, true);
-                this.Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers, x => x, true);
-                this.Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres, x => x, true);
-                this.Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers, x => x, true);
+                this.AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists, x => x);
+                this.Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers, x => x);
+                this.Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres, x => x);
+                this.Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers, x => x);
 
                 this.Album = Format(fileRef.Tag.Album);
                 this.BeatsPerMinute = fileRef.Tag.BeatsPerMinute;

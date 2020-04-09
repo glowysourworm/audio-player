@@ -18,9 +18,18 @@
             <!-- Menu Bar -->
             <Menu Background="Transparent" Padding="2">
                 <MenuItem Header="_File">
+                    
                     <MenuItem Header="_Open Directory"
                               Command="{Binding OpenDirectoryCommand}"
                               ToolTip.Tip="Loads media library from selected folder" />
+
+                    <MenuItem Header="O_pen Library"
+                              Command="{Binding OpenLibraryCommand}"
+                              ToolTip.Tip="Opens library from file" />
+
+                    <MenuItem Header="_Save Library"
+                              Command="{Binding SaveLibraryCommand}"
+                              ToolTip.Tip="Saves library data to file" />
                 </MenuItem>
             </Menu>
 

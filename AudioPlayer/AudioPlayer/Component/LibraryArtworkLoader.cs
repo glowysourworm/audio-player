@@ -19,7 +19,7 @@ namespace AudioPlayer.Component
                                              .GroupBy(entry => entry.ArtworkKey)
                                              .Actualize();
 
-            var artworkDict = new ConcurrentDictionary<string, Bitmap>();
+            var artworkDict = new ConcurrentDictionary<string, SerializableBitmap>();
 
             // Create tasks for downloading the artwork
             Parallel.ForEach(artworkGrouping, new ParallelOptions() { MaxDegreeOfParallelism = 8 }, group =>

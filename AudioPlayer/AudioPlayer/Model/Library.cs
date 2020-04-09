@@ -11,10 +11,11 @@ namespace AudioPlayer.Model
     [Serializable]
     public class Library : ModelBase
     {
+        readonly LibraryFile _libraryFile;
+
         SortedObservableCollection<string, LibraryEntry> _selectedStatistic;
 
         public ObservableCollection<LibraryStatistic> Statistics { get; set; }
-        public SortedObservableCollection<string, string> Directories { get; set; }
         public SortedObservableCollection<string, LibraryEntry> AllTitles { get; set; }
         public SortedObservableCollection<string, LibraryEntry> SelectedStatistic
         {
@@ -22,13 +23,12 @@ namespace AudioPlayer.Model
             set { Update(ref _selectedStatistic, value); }
         }
 
-        public Library()
-        {
-            Initialize();
-        }
+        public LibraryFile Database { get { return _libraryFile; } }
 
         public Library(LibraryFile libraryFile)
         {
+            _libraryFile = libraryFile;
+
             Initialize();
 
             foreach (var entry in libraryFile.Entries)
@@ -41,7 +41,7 @@ namespace AudioPlayer.Model
         public void Add(LibraryEntry entry)
         {
             // All Titles
-            this.AllTitles.Add(entry);
+            this.AllTitles.Add(entry, x => x.FileName);
 
             // Statistics 
             foreach (var statistic in this.Statistics)
@@ -50,59 +50,25 @@ namespace AudioPlayer.Model
 
         private void Initialize()
         {
-            this.Directories = new SortedObservableCollection<string, string>(x => x, false);
-
-            this.AllTitles = new SortedObservableCollection<string, LibraryEntry>(x => x.Title, true);
+            this.AllTitles = new SortedObservableCollection<string, LibraryEntry>();
             this.Statistics = new ObservableCollection<LibraryStatistic>();
 
             // Statistics
-            this.Statistics.Add(new LibraryStatistic("Files Scanned", x => x.FileName, x => true, false));
-            this.Statistics.Add(new LibraryStatistic("Files Valid", x => x.FileName, x => x.IsValid, false));
-            this.Statistics.Add(new LibraryStatistic("Complete Entries", x => x.FileName, x => x.IsComplete, false));
+            this.Statistics.Add(new LibraryStatistic("Files Scanned", x => x.FileName, x => true));
+            this.Statistics.Add(new LibraryStatistic("Files Valid", x => x.FileName, x => x.IsValid));
+            this.Statistics.Add(new LibraryStatistic("Complete Entries", x => x.FileName, x => x.IsComplete));
 
-            this.Statistics.Add(new LibraryStatistic("Album Unknown", x => x.FileName,
-                                                                      x => x.IsUnknown(z => z.Album),
-                                                                      false));
-
-            this.Statistics.Add(new LibraryStatistic("Album Artist Unknown", x => x.FileName,
-                                                                             x => x.IsUnknown(z => z.AlbumArtists),
-                                                                             false));
-
-            this.Statistics.Add(new LibraryStatistic("Genre Unknown", x => x.FileName,
-                                                                      x => x.IsUnknown(z => z.Genres),
-                                                                      false));
-
-            this.Statistics.Add(new LibraryStatistic("Lyrics Unknown", x => x.FileName,
-                                                                       x => x.IsUnknown(z => z.Lyrics),
-                                                                       false));
-
-            this.Statistics.Add(new LibraryStatistic("Title Unknown", x => x.FileName,
-                                                                      x => x.IsUnknown(z => z.Title),
-                                                                      false));
-
-            this.Statistics.Add(new LibraryStatistic("Year Unknown", x => x.FileName,
-                                                                     x => x.IsUnknown(z => z.Year),
-                                                                     false));
-
-            this.Statistics.Add(new LibraryStatistic("Track Unknown", x => x.FileName,
-                                                                      x => x.IsUnknown(z => z.Track),
-                                                                      false));
-
-            this.Statistics.Add(new LibraryStatistic("Track Count Unknown", x => x.FileName,
-                                                                            x => x.IsUnknown(z => z.TrackCount),
-                                                                            false));
-
-            this.Statistics.Add(new LibraryStatistic("Disc Unknown", x => x.FileName,
-                                                                     x => x.IsUnknown(z => z.Disc),
-                                                                     false));
-
-            this.Statistics.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName,
-                                                                            x => x.IsUnknown(z => z.DiscCount),
-                                                                            false));
-
-            this.Statistics.Add(new LibraryStatistic("Artwork Found", x => x.FileName,
-                                                                      x => x.ArtworkResolved != null,
-                                                                      false));
+            this.Statistics.Add(new LibraryStatistic("Album Unknown", x => x.FileName, x => x.IsUnknown(z => z.Album)));
+            this.Statistics.Add(new LibraryStatistic("Album Artist Unknown", x => x.FileName, x => x.IsUnknown(z => z.AlbumArtists)));
+            this.Statistics.Add(new LibraryStatistic("Genre Unknown", x => x.FileName, x => x.IsUnknown(z => z.Genres)));
+            this.Statistics.Add(new LibraryStatistic("Lyrics Unknown", x => x.FileName, x => x.IsUnknown(z => z.Lyrics)));
+            this.Statistics.Add(new LibraryStatistic("Title Unknown", x => x.FileName, x => x.IsUnknown(z => z.Title)));
+            this.Statistics.Add(new LibraryStatistic("Year Unknown", x => x.FileName, x => x.IsUnknown(z => z.Year)));
+            this.Statistics.Add(new LibraryStatistic("Track Unknown", x => x.FileName, x => x.IsUnknown(z => z.Track)));
+            this.Statistics.Add(new LibraryStatistic("Track Count Unknown", x => x.FileName, x => x.IsUnknown(z => z.TrackCount)));
+            this.Statistics.Add(new LibraryStatistic("Disc Unknown", x => x.FileName, x => x.IsUnknown(z => z.Disc)));
+            this.Statistics.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName, x => x.IsUnknown(z => z.DiscCount)));
+            this.Statistics.Add(new LibraryStatistic("Artwork Found", x => x.FileName, x => x.ArtworkResolved != null));
         }
     }
 }

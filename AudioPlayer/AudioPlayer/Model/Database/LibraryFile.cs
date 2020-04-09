@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Security.Cryptography;
 
 namespace AudioPlayer.Model.Database
 {
@@ -24,51 +23,82 @@ namespace AudioPlayer.Model.Database
         readonly Dictionary<string, LibraryEntry> _entries;
 
         // LibraryEntry.ArtworkKey -> Artwork buffer (Bitmap)
-        readonly Dictionary<string, Bitmap> _artwork;
+        readonly Dictionary<string, SerializableBitmap> _artwork;
 
         public IEnumerable<LibraryEntry> Entries
         {
             get { return _entries.Values; }
         }
 
+        public IEnumerable<SerializableBitmap> Artwork
+        {
+            get { return _artwork.Values; }
+        }
+
         public LibraryFile()
         {
             _entries = new Dictionary<string, LibraryEntry>();
-            _artwork = new Dictionary<string, Bitmap>();
+            _artwork = new Dictionary<string, SerializableBitmap>();
         }
 
         public LibraryFile(SerializationInfo info, StreamingContext context)
         {
-            _entries = (Dictionary<string, LibraryEntry>)info.GetValue("Entries", typeof(Dictionary<string, LibraryEntry>));
+            var entryCount = info.GetInt32("EntryCount");
+            var artworkCount = info.GetInt32("ArtworkCount");
 
-            // Deserialize artwork
-            var artwork = (Dictionary<string, byte[]>)info.GetValue("Artwork", typeof(Dictionary<string, byte[]>));
+            _entries = new Dictionary<string, LibraryEntry>();
+            _artwork = new Dictionary<string, SerializableBitmap>();
 
-            _artwork = artwork.ToDictionary(x => x.Key, x => Deserialize(x.Value));
+            for (int i=0;i<entryCount;i++)
+            {
+                var key = info.GetString("EntryKey" + i);
+                var value = (LibraryEntry)info.GetValue("EntryValue" + i, typeof(LibraryEntry));
+
+                _entries.Add(key, value);
+            }
+
+            for (int i = 0; i < artworkCount; i++)
+            {
+                var key = info.GetString("ArtworkKey" + i);
+                var value = (SerializableBitmap)info.GetValue("ArtworkValue" + i, typeof(SerializableBitmap));
+
+                _artwork.Add(key, value);
+            }
 
             OpenArtwork();
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("Entries", _entries);
+            info.AddValue("EntryCount", _entries.Count);
+            info.AddValue("ArtworkCount", _artwork.Count);
 
-            // Serialize to Dictionary<string, byte[]>
-            info.AddValue("Artwork", _artwork.ToDictionary(x => x.Key, x => Serialize(x.Value)));
+            var counter = 0;
+
+            foreach (var element in _entries)
+            {
+                info.AddValue("EntryKey" + counter, element.Key);
+                info.AddValue("EntryValue" + counter++, element.Value);
+            }
+
+            counter = 0;
+
+            foreach (var element in _artwork)
+            {
+                info.AddValue("ArtworkKey" + counter, element.Key);
+                info.AddValue("ArtworkValue" + counter++, element.Value);
+            }
         }
 
         /// <summary>
-        /// Re-creates bitmaps from byte arrays and sets the reference in each LibraryEntry
+        /// Sets references to bitmaps in the Library Entry
         /// </summary>
         private void OpenArtwork()
         {
-            foreach (var element in _artwork)
+            foreach (var entry in _entries.Values)
             {
-                foreach (var entry in _entries.Values)
-                {
-                    if (entry.ArtworkKey == element.Key)
-                        entry.ArtworkResolved = element.Value;
-                }
+                if (_artwork.ContainsKey(entry.ArtworkKey))
+                    entry.ArtworkResolved = _artwork[entry.ArtworkKey];
             }
         }
 
@@ -77,7 +107,7 @@ namespace AudioPlayer.Model.Database
             return _artwork.ContainsKey(entry.ArtworkKey);
         }
 
-        public Bitmap GetArtwork(string artworkKey)
+        public SerializableBitmap GetArtwork(string artworkKey)
         {
             return _artwork[artworkKey];
         }
@@ -87,33 +117,11 @@ namespace AudioPlayer.Model.Database
             _entries.Add(entry.FileName, entry);
         }
 
-        public void AddArtwork(string artworkKey, Bitmap image)
+        public void AddArtwork(string artworkKey, SerializableBitmap image)
         {
             if (!_artwork.ContainsKey(artworkKey))
             {
                 _artwork.Add(artworkKey, image);
-            }
-        }
-
-        private byte[] Serialize(Bitmap image)
-        {
-            using (var stream = new MemoryStream())
-            {
-                // Call Avalonia API
-                image.Save(stream);
-
-                // Fetch buffer from stream
-                var buffer = stream.GetBuffer();
-
-                return buffer;
-            }
-        }
-
-        private Bitmap Deserialize(byte[] buffer)
-        {
-            using (var stream = new MemoryStream(buffer))
-            {
-                return new Bitmap(stream);
             }
         }
     }

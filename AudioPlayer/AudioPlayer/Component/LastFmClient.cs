@@ -1,26 +1,25 @@
 ﻿using AudioPlayer.Constant;
 using AudioPlayer.Model;
-
-using Avalonia.Media.Imaging;
+using AudioPlayer.Model.Database;
 
 using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Api.Enums;
+
 using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AudioPlayer.Component
 {
     public static class LastFmClient
     {
-        public static async Task<Bitmap> DownloadArtwork(LibraryEntry entry)
+        public static async Task<SerializableBitmap> DownloadArtwork(LibraryEntry entry)
         {
             if (entry.IsUnknown(x => x.Album) ||
                 entry.IsUnknown(x => x.AlbumArtists))
-                return await Task.FromResult<Bitmap>(null);
+                return await Task.FromResult<SerializableBitmap>(null);
 
             else
             {
@@ -30,24 +29,24 @@ namespace AudioPlayer.Component
                     var client = new LastfmClient(WebConfiguration.LastFmAPIKey, WebConfiguration.LastFmAPISecret);
 
                     // Web Call ...
-                    var response = await client.Album.GetInfoAsync(entry.AlbumArtists[0], entry.Album, true);
-                    
+                    var response = await client.Album.GetInfoAsync(entry.AlbumArtists.First(), entry.Album, false);
+
                     // Status OK -> Create bitmap image from the url
                     if (response.Status == LastResponseStatus.Successful &&
                         response.Content.Images.Any())
                         return await DownloadImage(response.Content.Images.ExtraLarge.AbsoluteUri);
 
                     else
-                        return await Task.FromResult<Bitmap>(null);
+                        return await Task.FromResult<SerializableBitmap>(null);
                 }
                 catch (Exception)
                 {
-                    return await Task.FromResult<Bitmap>(null);
+                    return await Task.FromResult<SerializableBitmap>(null);
                 }
             }
         }
 
-        public static async Task<Bitmap> DownloadImage(string imageUrl)
+        public static async Task<SerializableBitmap> DownloadImage(string imageUrl)
         {
             try
             {
@@ -63,7 +62,7 @@ namespace AudioPlayer.Component
 
                         memoryStream.Seek(0, SeekOrigin.Begin);
 
-                        var bitmap = new Bitmap(memoryStream);
+                        var bitmap = new SerializableBitmap(memoryStream);
 
                         return bitmap;
                     }

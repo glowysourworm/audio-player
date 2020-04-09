@@ -1,5 +1,4 @@
-﻿using AudioPlayer.Event;
-using AudioPlayer.Extension;
+﻿using AudioPlayer.Extension;
 
 using ReactiveUI;
 
@@ -24,14 +23,13 @@ namespace AudioPlayer.Model
 
         public LibraryStatistic(string name,
                                 Func<LibraryEntry, IComparable> keySelector,
-                                Func<LibraryEntry, bool> statisticSelector,
-                                bool ignoreDuplicates)
+                                Func<LibraryEntry, bool> statisticSelector)
         {
             _keySelector = keySelector;
             _statisticSelector = statisticSelector;
 
             this.Name = name;
-            this.Collection = new SortedObservableCollection<IComparable, LibraryEntry>(keySelector, ignoreDuplicates);
+            this.Collection = new SortedObservableCollection<IComparable, LibraryEntry>();
 
             this.RaisePropertyChanged("Collection");
         }
@@ -50,7 +48,7 @@ namespace AudioPlayer.Model
         public void FilteredAdd(LibraryEntry entry)
         {
             if (_statisticSelector(entry))
-                this.Collection.Add(entry);
+                this.Collection.Add(entry, _keySelector);
         }
     }
 }

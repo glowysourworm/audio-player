@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
 
 namespace AudioPlayer.Component
 {
@@ -27,6 +24,16 @@ namespace AudioPlayer.Component
         /// <summary>
         /// NOTE*** No try / catch - please wrap execution
         /// </summary>
+        public static void Serialize<T>(T graph, Stream stream)
+        {
+            var formatter = new BinaryFormatter();
+
+            formatter.Serialize(stream, graph);
+        }
+
+        /// <summary>
+        /// NOTE*** No try / catch - please wrap execution
+        /// </summary>
         public static T Deserialize<T>(string file)
         {
             var formatter = new BinaryFormatter();
@@ -36,5 +43,29 @@ namespace AudioPlayer.Component
                 return (T)formatter.Deserialize(stream);
             }
         }
+
+        /// <summary>
+        /// NOTE*** No try / catch - please wrap execution
+        /// </summary>
+        public static T Deserialize<T>(Stream stream)
+        {
+            var formatter = new BinaryFormatter();
+
+            return (T)formatter.Deserialize(stream);
+        }
+
+        /// <summary>
+        /// NOTE*** No try / catch - please wrap execution
+        /// </summary>
+        public static T Deserialize<T>(byte[] buffer)
+        {
+            var formatter = new BinaryFormatter();
+
+            using (var stream = new MemoryStream(buffer))
+            {
+                return (T)formatter.Deserialize(stream);
+            }
+        }
+
     }
 }

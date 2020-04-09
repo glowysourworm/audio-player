@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace AudioPlayer.Extension
@@ -12,9 +11,9 @@ namespace AudioPlayer.Extension
     /// Collection implementation that supports binding and sorting by default.
     /// </summary>
     [Serializable]
-    public class SortedObservableCollection<K, T> : ICollection<T>,
+    public class SortedObservableCollection<K, T> : IList<T>,
+                                                    ICollection<T>,
                                                     IEnumerable<T>,
-                                                    IList<T>,
                                                     INotifyCollectionChanged,
                                                     INotifyPropertyChanged,
                                                     ISerializable
@@ -23,77 +22,88 @@ namespace AudioPlayer.Extension
         public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
-        readonly Func<T, K> _keySelector;
-        readonly bool _ignoreDuplicates;
+        List<K> _keys;
+        List<T> _values;
+        Dictionary<K, T> _dict;
 
-        List<T> _list;
+        public int Count { get { return _keys.Count; } }
 
-        public int Count
-        {
-            get { return _list.Count; }
-        }
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
+        public bool IsReadOnly { get { return false; } }
 
-        public T this[int index]
+        public T this[int index] 
         {
-            get { return (T)_list[index]; }
-            set { throw new NotSupportedException("Set indexer not support. Use Add(..) method"); }
+            get { return _values[index]; }
+            set { throw new NotSupportedException("Please use Add method to insert items"); } 
         }
 
-        public T Get(K key)
+        public T this[K key]
         {
-            return _list.First(x => _keySelector(x).CompareTo(key) == 0);
+            get { return _dict[key]; }
+            set { throw new NotSupportedException("Not supported -> please use the Add method"); }
         }
 
-        public SortedObservableCollection(Func<T, K> keySelector, bool ignoreDuplicates)
+        public SortedObservableCollection()
         {
-            _keySelector = keySelector;
-            _ignoreDuplicates = ignoreDuplicates;
-            _list = new List<T>();
+            _dict = new Dictionary<K, T>();
+            _keys = new List<K>();
+            _values = new List<T>();
         }
 
-        public SortedObservableCollection(IEnumerable<T> collection, Func<T, K> keySelector, bool ignoreDuplicates)
+        public SortedObservableCollection(IEnumerable<T> collection, Func<T, K> keySelector)
         {
-            _keySelector = keySelector;
-            _ignoreDuplicates = ignoreDuplicates;
-            _list = new List<T>();
+            _dict = new Dictionary<K, T>();
+            _keys = new List<K>();
+            _values = new List<T>();
 
+            // Load collections
             foreach (var item in collection)
-                Add(item);
+                Add(keySelector(item), item);
+        }
+
+        public SortedObservableCollection(SerializationInfo info, StreamingContext context)
+        {
+            _dict = new Dictionary<K, T>();
+            _keys = new List<K>();
+            _values = new List<T>();
+
+            // UNSORTED
+            var count = info.GetInt32("Count");
+
+            // (SORT) Populate private collections from deserialized items
+            for (int i=0;i<count;i++)
+            {
+                var key = (K)info.GetValue("Key" + i, typeof(K));
+                var value = (T)info.GetValue("Value" + i, typeof(T));
+
+                Add(key, value);
+            }
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            // TODO
+            // UNSORTED
+            info.AddValue("Count", _dict.Count);
+
+            var counter = 0;
+
+            foreach (var element in _dict)
+            {
+                info.AddValue("Key" + counter, element.Key);
+                info.AddValue("Value" + counter++, element.Value);
+            }
         }
 
-        public int IndexOf(T item)
+        public void Add(T value)
         {
-            return _list.IndexOf(item);
+            throw new NotSupportedException("Please use Add(T, Func<T, K>) method with key selector");
         }
 
-        public void Insert(int index, T item)
+        public void Add(T value, Func<T, K> keySelector)
         {
-            throw new NotSupportedException("Insert not support. Use Add(..) method");
+            Add(keySelector(value), value);
         }
 
-        public void RemoveAt(int index)
-        {
-            // Item to remove
-            var item = this[index];
-
-            // Remove the item
-            _list.RemoveAt(index);
-
-            // Notify collection changed
-            OnRemove(item, index);
-            OnPropertyChanged("Count");
-        }
-
-        public void Add(T item)
+        protected void Add(K key, T value)
         {
             // Procedure
             //
@@ -103,70 +113,103 @@ namespace AudioPlayer.Extension
             //
 
             // Binary search for the insert location
-            var index = _list.Count > 0 ? BinarySearch(item, 0, _list.Count - 1)
+            var index = _keys.Count > 0 ? BinarySearch(key, 0, _keys.Count - 1)
                                         : 0;
 
-            _list.Insert(index, item);
+            _keys.Insert(index, key);
+            _values.Insert(index, value);
 
-            OnInsert(item, index);
+            // DICTIONARY NOT SORTED
+            _dict.Add(key, value);
+
+            OnInsert(value, index);
             OnPropertyChanged("Count");
-        }
-
-        public void Clear()
-        {
-            _list.Clear();
-
-            OnReset();
-            OnPropertyChanged("Count");
-        }
-
-        public bool Contains(T item)
-        {
-            return _list.Contains(item);
-        }
-
-        public bool ContainsKey(K key)
-        {
-            return _list.Any(x => _keySelector(x).CompareTo(key) == 0);
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            throw new NotImplementedException();
         }
 
         public bool Remove(T item)
         {
-            var index = _list.IndexOf(item);
+            throw new NotSupportedException("Please use the Remove(T, Func<T, K>) with key selector");
+        }
 
-            if (_list.Remove(item))
-            {
-                OnRemove(item, index);
-                OnPropertyChanged("Count");
+        public bool Remove(T item, Func<T, K> keySelector)
+        {
+            return Remove(keySelector(item));
+        }
 
-                return true;
-            }
+        protected bool Remove(K key)
+        {
+            // Fetch index of item
+            var index = _keys.IndexOf(key);
 
-            return false;
+            // Fetch item
+            var item = _dict[key];
+
+            // Remove the item
+            _keys.RemoveAt(index);
+            _values.RemoveAt(index);
+            _dict.Remove(key);
+
+            // Notify collection changed
+            OnRemove(item, index);
+            OnPropertyChanged("Count");
+
+            return true;
+        }
+
+        public bool ContainsKey(K key)
+        {
+            return _dict.ContainsKey(key);
+        }
+
+        public void Clear()
+        {
+            _dict.Clear();
+            _keys.Clear();
+            _values.Clear();
+        }
+
+        public int IndexOf(T item)
+        {
+            return _values.IndexOf(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void RemoveAt(int index)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _list.GetEnumerator();
+            return _values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _list.GetEnumerator();
+            return _values.GetEnumerator();
         }
 
-        int BinarySearch(T searchItem, int lowerIndex, int upperIndex)
+        int BinarySearch(K searchKey, int lowerIndex, int upperIndex)
         {
             // Choose the middle index to compare
             var middleIndex = (int)Math.Floor((upperIndex + lowerIndex) / 2.0);
 
             // Perform key comparison
-            var comparison = Compare(searchItem, _list[middleIndex]);
+            var comparison = searchKey.CompareTo(_keys[middleIndex]);
 
             if (comparison < 0)
             {
@@ -178,33 +221,20 @@ namespace AudioPlayer.Extension
                 else if (middleIndex == lowerIndex)
                     return middleIndex;
 
-                return BinarySearch(searchItem, lowerIndex, middleIndex - 1);
+                return BinarySearch(searchKey, lowerIndex, middleIndex - 1);
             }
-            else if (comparison == 0)
-            {
-                if (!_ignoreDuplicates)
-                    throw new Exception("Duplicate key found SortedObservableCollection");
 
-                // Match found - insert after
-                else
-                    return middleIndex + 1;
-            }
+            else if (comparison == 0)
+                throw new Exception("Duplicate key found SortedObservableCollection");
+
             else
             {
                 // Single item left
                 if (lowerIndex == upperIndex)
                     return middleIndex + 1;
 
-                return BinarySearch(searchItem, middleIndex + 1, upperIndex);
+                return BinarySearch(searchKey, middleIndex + 1, upperIndex);
             }
-        }
-
-        int Compare(T item1, T item2)
-        {
-            var value1 = _keySelector(item1);
-            var value2 = _keySelector(item2);
-
-            return value1.CompareTo(value2);
         }
 
         void OnPropertyChanged(string property)
@@ -218,7 +248,7 @@ namespace AudioPlayer.Extension
             // Hopefully a performance boost - depending on the UI implementation
             if (this.CollectionChanged != null)
                 this.CollectionChanged(
-                        this, 
+                        _values,
                         new NotifyCollectionChangedEventArgs(
                             NotifyCollectionChangedAction.Add, item, index));
         }
@@ -228,7 +258,7 @@ namespace AudioPlayer.Extension
             // Hopefully a performance boost - depending on the UI implementation
             if (this.CollectionChanged != null)
                 this.CollectionChanged(
-                        this,
+                        _values,
                         new NotifyCollectionChangedEventArgs(
                             NotifyCollectionChangedAction.Remove, item, index));
         }
@@ -236,7 +266,8 @@ namespace AudioPlayer.Extension
         void OnReset()
         {
             if (this.CollectionChanged != null)
-                this.CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+                this.CollectionChanged(_values,
+                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
         }
     }
 }
