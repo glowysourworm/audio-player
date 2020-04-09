@@ -1,7 +1,7 @@
 ﻿using AudioPlayer.Constant;
 using AudioPlayer.Model;
 using AudioPlayer.Model.Database;
-
+using AudioPlayer.Model.Interface;
 using IF.Lastfm.Core.Api;
 using IF.Lastfm.Core.Api.Enums;
 
@@ -15,7 +15,7 @@ namespace AudioPlayer.Component
 {
     public static class LastFmClient
     {
-        public static async Task<SerializableBitmap> DownloadArtwork(LibraryEntry entry)
+        public static async Task<SerializableBitmap> DownloadArtwork(ILibraryEntry entry)
         {
             if (entry.IsUnknown(x => x.Album) ||
                 entry.IsUnknown(x => x.AlbumArtists))

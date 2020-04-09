@@ -1,4 +1,6 @@
-﻿using System;
+﻿using AudioPlayer.Component;
+using AudioPlayer.Model.Interface;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 
@@ -16,12 +18,12 @@ namespace AudioPlayer.Model.Database
 
 
         // LibraryEntry.FileName -> LibraryEntry
-        readonly Dictionary<string, LibraryEntry> _entries;
+        readonly Dictionary<string, ILibraryEntry> _entries;
 
         // LibraryEntry.ArtworkKey -> Artwork buffer (Bitmap)
         readonly Dictionary<string, SerializableBitmap> _artwork;
 
-        public IEnumerable<LibraryEntry> Entries
+        public IEnumerable<ILibraryEntry> Entries
         {
             get { return _entries.Values; }
         }
@@ -33,7 +35,7 @@ namespace AudioPlayer.Model.Database
 
         public LibraryFile()
         {
-            _entries = new Dictionary<string, LibraryEntry>();
+            _entries = new Dictionary<string, ILibraryEntry>();
             _artwork = new Dictionary<string, SerializableBitmap>();
         }
 
@@ -42,13 +44,13 @@ namespace AudioPlayer.Model.Database
             var entryCount = info.GetInt32("EntryCount");
             var artworkCount = info.GetInt32("ArtworkCount");
 
-            _entries = new Dictionary<string, LibraryEntry>();
+            _entries = new Dictionary<string, ILibraryEntry>();
             _artwork = new Dictionary<string, SerializableBitmap>();
 
             for (int i = 0; i < entryCount; i++)
             {
                 var key = info.GetString("EntryKey" + i);
-                var value = (LibraryEntry)info.GetValue("EntryValue" + i, typeof(LibraryEntry));
+                var value = (ILibraryEntry)info.GetValue("EntryValue" + i, typeof(ILibraryEntry));
 
                 _entries.Add(key, value);
             }
@@ -60,8 +62,6 @@ namespace AudioPlayer.Model.Database
 
                 _artwork.Add(key, value);
             }
-
-            OpenArtwork();
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -86,29 +86,20 @@ namespace AudioPlayer.Model.Database
             }
         }
 
-        /// <summary>
-        /// Sets references to bitmaps in the Library Entry
-        /// </summary>
-        private void OpenArtwork()
+        public bool ContainsArtworkFor(ILibraryEntry entry)
         {
-            foreach (var entry in _entries.Values)
-            {
-                if (_artwork.ContainsKey(entry.ArtworkKey))
-                    entry.ArtworkResolved = _artwork[entry.ArtworkKey];
-            }
+            if (!LibraryArtworkLoader.HasValidArtworkKey(entry))
+                return false;
+
+            return _artwork.ContainsKey(LibraryArtworkLoader.GetArtworkKey(entry));
         }
 
-        public bool ContainsArtwork(LibraryEntry entry)
+        public SerializableBitmap GetArtwork(ILibraryEntry entry)
         {
-            return _artwork.ContainsKey(entry.ArtworkKey);
+            return _artwork[LibraryArtworkLoader.GetArtworkKey(entry)];
         }
 
-        public SerializableBitmap GetArtwork(string artworkKey)
-        {
-            return _artwork[artworkKey];
-        }
-
-        public void AddEntry(LibraryEntry entry)
+        public void AddEntry(ILibraryEntry entry)
         {
             _entries.Add(entry.FileName, entry);
         }

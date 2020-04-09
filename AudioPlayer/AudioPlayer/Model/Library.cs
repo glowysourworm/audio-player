@@ -1,6 +1,8 @@
-﻿using AudioPlayer.Event;
+﻿using AudioPlayer.Component;
+using AudioPlayer.Event;
 using AudioPlayer.Extension;
 using AudioPlayer.Model.Database;
+using AudioPlayer.Model.Interface;
 using ReactiveUI;
 
 using System;
@@ -9,15 +11,15 @@ using System.Collections.ObjectModel;
 namespace AudioPlayer.Model
 {
     [Serializable]
-    public class Library : ModelBase
+    public class Library : ModelBase<Library>
     {
         readonly LibraryFile _libraryFile;
 
-        SortedObservableCollection<string, LibraryEntry> _selectedStatistic;
+        SortedObservableCollection<string, ILibraryEntry> _selectedStatistic;
 
         public ObservableCollection<LibraryStatistic> Statistics { get; set; }
-        public SortedObservableCollection<string, LibraryEntry> AllTitles { get; set; }
-        public SortedObservableCollection<string, LibraryEntry> SelectedStatistic
+        public SortedObservableCollection<string, ILibraryEntry> AllTitles { get; set; }
+        public SortedObservableCollection<string, ILibraryEntry> SelectedStatistic
         {
             get { return _selectedStatistic; }
             set { Update(ref _selectedStatistic, value); }
@@ -38,7 +40,7 @@ namespace AudioPlayer.Model
         /// <summary>
         /// Combined add method to update all library collections
         /// </summary>
-        public void Add(LibraryEntry entry)
+        public void Add(ILibraryEntry entry)
         {
             // All Titles
             this.AllTitles.Add(entry, x => x.FileName);
@@ -50,25 +52,21 @@ namespace AudioPlayer.Model
 
         private void Initialize()
         {
-            this.AllTitles = new SortedObservableCollection<string, LibraryEntry>();
+            this.AllTitles = new SortedObservableCollection<string, ILibraryEntry>();
             this.Statistics = new ObservableCollection<LibraryStatistic>();
 
             // Statistics
             this.Statistics.Add(new LibraryStatistic("Files Scanned", x => x.FileName, x => true));
-            this.Statistics.Add(new LibraryStatistic("Files Valid", x => x.FileName, x => x.IsValid));
-            this.Statistics.Add(new LibraryStatistic("Complete Entries", x => x.FileName, x => x.IsComplete));
 
             this.Statistics.Add(new LibraryStatistic("Album Unknown", x => x.FileName, x => x.IsUnknown(z => z.Album)));
             this.Statistics.Add(new LibraryStatistic("Album Artist Unknown", x => x.FileName, x => x.IsUnknown(z => z.AlbumArtists)));
             this.Statistics.Add(new LibraryStatistic("Genre Unknown", x => x.FileName, x => x.IsUnknown(z => z.Genres)));
-            this.Statistics.Add(new LibraryStatistic("Lyrics Unknown", x => x.FileName, x => x.IsUnknown(z => z.Lyrics)));
             this.Statistics.Add(new LibraryStatistic("Title Unknown", x => x.FileName, x => x.IsUnknown(z => z.Title)));
             this.Statistics.Add(new LibraryStatistic("Year Unknown", x => x.FileName, x => x.IsUnknown(z => z.Year)));
             this.Statistics.Add(new LibraryStatistic("Track Unknown", x => x.FileName, x => x.IsUnknown(z => z.Track)));
-            this.Statistics.Add(new LibraryStatistic("Track Count Unknown", x => x.FileName, x => x.IsUnknown(z => z.TrackCount)));
             this.Statistics.Add(new LibraryStatistic("Disc Unknown", x => x.FileName, x => x.IsUnknown(z => z.Disc)));
             this.Statistics.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName, x => x.IsUnknown(z => z.DiscCount)));
-            this.Statistics.Add(new LibraryStatistic("Artwork Found", x => x.FileName, x => x.ArtworkResolved != null));
+            this.Statistics.Add(new LibraryStatistic("Artwork Found", x => x.FileName, x => _libraryFile.ContainsArtworkFor(x)));
         }
     }
 }

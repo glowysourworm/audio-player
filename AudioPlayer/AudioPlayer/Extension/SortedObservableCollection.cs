@@ -11,9 +11,7 @@ namespace AudioPlayer.Extension
     /// Collection implementation that supports binding and sorting by default.
     /// </summary>
     [Serializable]
-    public class SortedObservableCollection<K, T> : IList<T>,
-                                                    ICollection<T>,
-                                                    IEnumerable<T>,
+    public class SortedObservableCollection<K, T> : IList<T>, ICollection<T>, IEnumerable<T>,
                                                     INotifyCollectionChanged,
                                                     INotifyPropertyChanged,
                                                     ISerializable

@@ -1,6 +1,8 @@
 ﻿using AudioPlayer.Extension;
 using AudioPlayer.Model.Database;
-using Avalonia.Media.Imaging;
+using AudioPlayer.Model.Interface;
+
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading.Tasks;
@@ -16,7 +18,8 @@ namespace AudioPlayer.Component
         {
             // Create specific artwork keys for download
             var artworkGrouping = libraryFile.Entries
-                                             .GroupBy(entry => entry.ArtworkKey)
+                                             .Where(entry => LibraryArtworkLoader.HasValidArtworkKey(entry))
+                                             .GroupBy(entry => LibraryArtworkLoader.GetArtworkKey(entry))
                                              .Actualize();
 
             var artworkDict = new ConcurrentDictionary<string, SerializableBitmap>();
@@ -50,16 +53,24 @@ namespace AudioPlayer.Component
             {
                 // Add distinct artwork to library by "Artwork Key"
                 libraryFile.AddArtwork(element.Key, element.Value);
-
-                // Set all references in the library file
-                var group = artworkGrouping.FirstOrDefault(x => x.Key == element.Key);
-
-                if (group != null)
-                {
-                    foreach (var entry in group)
-                        entry.ArtworkResolved = libraryFile.GetArtwork(entry.ArtworkKey);
-                }
             }
+        }
+
+        public static string GetArtworkKey(ILibraryEntry libraryEntry)
+        {
+            if (!HasValidArtworkKey(libraryEntry))
+                return null;
+
+            return string.Join(',', libraryEntry.AlbumArtists, libraryEntry.Album);
+        }
+
+        public static bool HasValidArtworkKey(ILibraryEntry libraryEntry)
+        {
+            if (libraryEntry.IsUnknown(x => x.AlbumArtists) ||
+                libraryEntry.IsUnknown(x => x.Album))
+                return false;
+
+            return true;
         }
     }
 }

@@ -1,7 +1,13 @@
 ﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converter="clr-namespace:AudioPlayer.View.Converter"
              x:Class="AudioPlayer.View.ManagerView"
              Margin="0">
+
+    <UserControl.Resources>
+        <converter:StringArrayConverter x:Key="StringArrayConverter" />
+        <converter:ArtworkCollectionConverter x:Key="ArtworkCollectionConverter" />
+    </UserControl.Resources>
 
     <UserControl.Styles>
         
@@ -61,7 +67,7 @@
                         Margin="0, 10, 0, 0"
                         Width="180" 
                         Height="180" >
-                    <Image Source="{Binding ArtworkResolved}" />
+                    <Image Source="{Binding Converter={StaticResource ArtworkCollectionConverter} ConverterParameter={Binding Library.Database}}" />
                 </Border>
 
                 <!-- Tag Fields -->
@@ -76,13 +82,13 @@
                     <!-- Artist(s) -->
                     <Grid Margin="5" HorizontalAlignment="Stretch">
                         <TextBlock Classes="TagField" Text="Artist(s)" HorizontalAlignment="Left" />
-                        <TextBlock Classes="TagField" Text="{Binding AlbumArtistsJoined}" HorizontalAlignment="Right" />
+                        <TextBlock Classes="TagField" Text="{Binding AlbumArtists, Converter={StaticResource StringArrayConverter}}" HorizontalAlignment="Right" />
                     </Grid>
 
                     <!-- Genre(s) -->
                     <Grid Margin="5" HorizontalAlignment="Stretch">
                         <TextBlock Classes="TagField" Text="Genre(s)" HorizontalAlignment="Left" />
-                        <TextBlock Classes="TagField" Text="{Binding GenresJoined}" HorizontalAlignment="Right" />
+                        <TextBlock Classes="TagField" Text="{Binding Genres, Converter={StaticResource StringArrayConverter}}" HorizontalAlignment="Right" />
                     </Grid>
 
                     <!-- Album -->

@@ -1,15 +1,15 @@
 ﻿using AudioPlayer.Extension;
-
+using AudioPlayer.Model.Interface;
 using ReactiveUI;
 
 using System;
 
 namespace AudioPlayer.Model
 {
-    public class LibraryStatistic : ModelBase
+    public class LibraryStatistic : ModelBase<LibraryStatistic>
     {
-        readonly Func<LibraryEntry, IComparable> _keySelector;
-        readonly Func<LibraryEntry, bool> _statisticSelector;
+        readonly Func<ILibraryEntry, IComparable> _keySelector;
+        readonly Func<ILibraryEntry, bool> _statisticSelector;
 
         string _name;
 
@@ -19,17 +19,17 @@ namespace AudioPlayer.Model
             set { Update(ref _name, value); }
         }
 
-        public SortedObservableCollection<IComparable, LibraryEntry> Collection { get; set; }
+        public SortedObservableCollection<IComparable, ILibraryEntry> Collection { get; set; }
 
         public LibraryStatistic(string name,
-                                Func<LibraryEntry, IComparable> keySelector,
-                                Func<LibraryEntry, bool> statisticSelector)
+                                Func<ILibraryEntry, IComparable> keySelector,
+                                Func<ILibraryEntry, bool> statisticSelector)
         {
             _keySelector = keySelector;
             _statisticSelector = statisticSelector;
 
             this.Name = name;
-            this.Collection = new SortedObservableCollection<IComparable, LibraryEntry>();
+            this.Collection = new SortedObservableCollection<IComparable, ILibraryEntry>();
 
             this.RaisePropertyChanged("Collection");
         }
@@ -45,7 +45,7 @@ namespace AudioPlayer.Model
         /// <summary>
         /// Adds the entry to the statistic collection if it passes the criteria (passed in at constructor)
         /// </summary>
-        public void FilteredAdd(LibraryEntry entry)
+        public void FilteredAdd(ILibraryEntry entry)
         {
             if (_statisticSelector(entry))
                 this.Collection.Add(entry, _keySelector);

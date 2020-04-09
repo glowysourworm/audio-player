@@ -1,7 +1,7 @@
 ﻿using AudioPlayer.Extension;
 using AudioPlayer.Model;
 using AudioPlayer.Model.Database;
-
+using AudioPlayer.Model.Interface;
 using Avalonia.Threading;
 
 using System;
@@ -25,16 +25,17 @@ namespace AudioPlayer.Component
 
             }).ToList();
 
-            var entries = new ConcurrentBag<LibraryEntry>();
+            var entries = new ConcurrentBag<ILibraryEntry>();
 
             // Use TPL to create library entries
             Parallel.ForEach(files, /* new ParallelOptions() { MaxDegreeOfParallelism = 4 }, */ (file) =>
             {
                 // Generate entry
-                var entry = new LibraryEntry(file);
+                var entry = LibraryEntryLoader.Load(file);
 
                 // Keep track of completed entries 
-                entries.Add(entry);
+                if (entry != null)
+                    entries.Add(entry);
             });
 
             foreach (var entry in entries)
@@ -42,8 +43,8 @@ namespace AudioPlayer.Component
                 // Add entry to the library
                 //
                 // TODO: HANDLE INVALID ENTRIES
-                if (entry.IsValid)
-                    libraryFile.AddEntry(entry);
+                // if (entry.IsValid)
+                libraryFile.AddEntry(entry);
             }
 
             return libraryFile;

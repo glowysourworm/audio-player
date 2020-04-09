@@ -10,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace AudioPlayer.Model
 {
-    public class LibraryManager : ModelBase
+    public class LibraryManager : ModelBase<LibraryManager>
     {
-        Library _library;
+        static Library _library;
         string _status;
 
         public Library Library
@@ -26,11 +26,25 @@ namespace AudioPlayer.Model
             set { Update(ref _status, value); }
         }
 
+        // TODO: CREATE STATIC SERVICE CONTAINER.. SOMETHING LIKE A UNITY CONTAINER
+        public static Library CurrentLibrary
+        {
+            get { return _library; }
+        }
+
         public IReactiveCommand OpenDirectoryCommand { get; set; }
 
         public static LibraryManager Create()
         {
             LibraryManager manager = new LibraryManager();
+
+#if DEBUG_NO_LOAD
+
+            // Create an empty library
+            manager.Library = new Library(new LibraryFile());
+            manager.Status = "Library Ready!";
+
+#else
 
             // Try and open existing library
             try
@@ -50,7 +64,7 @@ namespace AudioPlayer.Model
             // Create an empty library
             manager.Library = new Library(new LibraryFile());
             manager.Status = "Library Ready!";
-
+#endif
             return manager;
         }
 

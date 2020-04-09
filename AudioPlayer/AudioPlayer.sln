@@ -7,10 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioPlayer", "AudioPlayer\
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug - NO LOAD|Any CPU = Debug - NO LOAD|Any CPU
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6136CD57-4C92-4DF3-8C1E-01651CA439ED}.Debug - NO LOAD|Any CPU.ActiveCfg = Debug - NO LOAD|Any CPU
+		{6136CD57-4C92-4DF3-8C1E-01651CA439ED}.Debug - NO LOAD|Any CPU.Build.0 = Debug - NO LOAD|Any CPU
 		{6136CD57-4C92-4DF3-8C1E-01651CA439ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6136CD57-4C92-4DF3-8C1E-01651CA439ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6136CD57-4C92-4DF3-8C1E-01651CA439ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
