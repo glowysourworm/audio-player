@@ -4,6 +4,7 @@ using AudioPlayer.Model.Database;
 using ReactiveUI;
 
 using System;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -287,10 +288,10 @@ namespace AudioPlayer.Model
             {
                 var fileRef = TagLib.File.Create(file);
 
-                this.AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists, x => x);
-                this.Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers, x => x);
-                this.Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres, x => x);
-                this.Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers, x => x);
+                this.AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists.Distinct(), x => x);
+                this.Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers.Distinct(), x => x);
+                this.Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres.Distinct(), x => x);
+                this.Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers.Distinct(), x => x);
 
                 this.Album = Format(fileRef.Tag.Album);
                 this.BeatsPerMinute = fileRef.Tag.BeatsPerMinute;

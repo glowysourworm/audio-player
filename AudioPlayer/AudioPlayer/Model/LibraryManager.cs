@@ -1,9 +1,11 @@
 ﻿using AudioPlayer.Component;
+using AudioPlayer.Model.Database;
 
 using Avalonia.Controls;
 
 using ReactiveUI;
 
+using System;
 using System.Threading.Tasks;
 
 namespace AudioPlayer.Model
@@ -26,38 +28,47 @@ namespace AudioPlayer.Model
 
         public IReactiveCommand OpenDirectoryCommand { get; set; }
 
-        public IReactiveCommand SaveLibraryCommand { get; set; }
-        public IReactiveCommand OpenLibraryCommand { get; set; }
-
-        public LibraryManager()
+        public static LibraryManager Create()
         {
-            this.Status = "Please open existing library or directory";
+            LibraryManager manager = new LibraryManager();
 
-            this.SaveLibraryCommand = ReactiveCommand.Create(async () =>
+            // Try and open existing library
+            try
             {
-                var dialog = new OpenFolderDialog();
+                var libraryFile = LibraryArchiver.Open();
 
-                var result = await dialog.ShowAsync(App.MainWindow);
+                manager.Library = new Library(libraryFile);
+                manager.Status = "Library Ready!";
 
-                if (string.IsNullOrEmpty(result))
-                    return;
-
-                LibraryArchiver.Save(this.Library.Database, result);
-            });
-
-            this.OpenLibraryCommand = ReactiveCommand.Create(async () =>
+                return manager;
+            }
+            catch (Exception)
             {
-                var dialog = new OpenFolderDialog();
+                manager = new LibraryManager();
+            }
 
-                var result = await dialog.ShowAsync(App.MainWindow);
+            // Create an empty library
+            manager.Library = new Library(new LibraryFile());
+            manager.Status = "Library Ready!";
 
-                if (string.IsNullOrEmpty(result))
-                    return;
+            return manager;
+        }
 
-                var libraryFile = LibraryArchiver.Open(result);
+        public void Save()
+        {
+            try
+            {
+                LibraryArchiver.Save(_library.Database);
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
 
-                this.Library = new Library(libraryFile);
-            });
+        protected LibraryManager()
+        {
+            this.Status = "Please load library instance";
 
             this.OpenDirectoryCommand = ReactiveCommand.Create(async () =>
             {

@@ -1,9 +1,5 @@
-﻿using Avalonia.Media.Imaging;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.Serialization;
 
 namespace AudioPlayer.Model.Database
@@ -49,7 +45,7 @@ namespace AudioPlayer.Model.Database
             _entries = new Dictionary<string, LibraryEntry>();
             _artwork = new Dictionary<string, SerializableBitmap>();
 
-            for (int i=0;i<entryCount;i++)
+            for (int i = 0; i < entryCount; i++)
             {
                 var key = info.GetString("EntryKey" + i);
                 var value = (LibraryEntry)info.GetValue("EntryValue" + i, typeof(LibraryEntry));

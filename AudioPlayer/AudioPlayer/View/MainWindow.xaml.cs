@@ -14,7 +14,14 @@ namespace AudioPlayer.View
 #if DEBUG
             this.AttachDevTools();
 #endif
-            this.DataContext = new LibraryManager();
+            var libraryManager = LibraryManager.Create();
+
+            this.Closing += (sender, e) =>
+            {
+                libraryManager.Save();
+            };
+
+            this.DataContext = libraryManager;
         }
 
         private void InitializeComponent()
