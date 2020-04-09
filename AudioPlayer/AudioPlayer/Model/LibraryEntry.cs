@@ -15,12 +15,10 @@ using TagLib;
 namespace AudioPlayer.Model
 {
     [Serializable]
-    public class LibraryEntry : ModelBase<LibraryEntry>, ILibraryEntry
+    public class LibraryEntry : ModelBase, ILibraryEntry
     {
         #region (private) Backing Fields
         SortedObservableCollection<string, string> _albumArtists;
-        SortedObservableCollection<string, string> _composers;
-        SortedObservableCollection<string, string> _performers;
         SortedObservableCollection<string, string> _genres;
 
         string _fileName;
@@ -70,25 +68,15 @@ namespace AudioPlayer.Model
             set { Update(ref _discCount, value); }
         }
 
-        public IEnumerable<string> AlbumArtists
+        public SortedObservableCollection<string, string> AlbumArtists
         {
             get { return _albumArtists; }
-            set { _albumArtists = value as SortedObservableCollection<string, string>; OnPropertyChanged(x => x.AlbumArtists); }
+            set { Update(ref _albumArtists, value); }
         }
-        public IEnumerable<string> Composers
-        {
-            get { return _composers; }
-            set { _composers = value as SortedObservableCollection<string, string>; OnPropertyChanged(x => x.Composers); }
-        }
-        public IEnumerable<string> Performers
-        {
-            get { return _performers; }
-            set { _performers = value as SortedObservableCollection<string, string>; OnPropertyChanged(x => x.Performers); }
-        }
-        public IEnumerable<string> Genres
+        public SortedObservableCollection<string, string> Genres
         {
             get { return _genres; }
-            set { _genres = value as SortedObservableCollection<string, string>; OnPropertyChanged(x => x.Genres); }
+            set { Update(ref _genres, value); }
         }
         #endregion
 
@@ -110,8 +98,6 @@ namespace AudioPlayer.Model
             this.Disc = info.GetUInt32("Disc");
             this.DiscCount = info.GetUInt32("DiscCount");
             this.AlbumArtists = (SortedObservableCollection<string, string>)info.GetValue("AlbumArtists", typeof(SortedObservableCollection<string, string>));
-            this.Composers = (SortedObservableCollection<string, string>)info.GetValue("Composers", typeof(SortedObservableCollection<string, string>));
-            this.Performers = (SortedObservableCollection<string, string>)info.GetValue("Performers", typeof(SortedObservableCollection<string, string>));
             this.Genres = (SortedObservableCollection<string, string>)info.GetValue("Genres", typeof(SortedObservableCollection<string, string>));
         }
 
@@ -126,8 +112,6 @@ namespace AudioPlayer.Model
             info.AddValue("Disc", this.Disc);
             info.AddValue("DiscCount", this.DiscCount);
             info.AddValue("AlbumArtists", this.AlbumArtists);
-            info.AddValue("Composers", this.Composers);
-            info.AddValue("Performers", this.Performers);
             info.AddValue("Genres", this.Genres);
         }
     }

@@ -1,4 +1,5 @@
-﻿using AudioPlayer.Model.Database;
+﻿using AudioPlayer.Extension;
+using AudioPlayer.Model.Database;
 
 using System.Collections.Generic;
 
@@ -13,9 +14,7 @@ namespace AudioPlayer.Model.Interface
         uint Disc { get; set; }
         uint DiscCount { get; set; }
 
-        IEnumerable<string> AlbumArtists { get; set; }
-        IEnumerable<string> Composers { get; set; }
-        IEnumerable<string> Performers { get; set; }
-        IEnumerable<string> Genres { get; set; }
+        SortedObservableCollection<string, string> AlbumArtists { get; set; }
+        SortedObservableCollection<string, string> Genres { get; set; }
     }
 }

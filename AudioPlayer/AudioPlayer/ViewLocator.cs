@@ -26,7 +26,7 @@ namespace AudioPlayer
 
         public bool Match(object data)
         {
-            return data is IModelBase;
+            return data is ModelBase;
         }
     }
 }

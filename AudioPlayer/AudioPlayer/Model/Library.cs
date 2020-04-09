@@ -11,7 +11,7 @@ using System.Collections.ObjectModel;
 namespace AudioPlayer.Model
 {
     [Serializable]
-    public class Library : ModelBase<Library>
+    public class Library : ModelBase
     {
         readonly LibraryFile _libraryFile;
 

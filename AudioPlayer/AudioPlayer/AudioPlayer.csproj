@@ -28,9 +28,8 @@
     <PackageReference Include="Avalonia" Version="0.9.7" />
     <PackageReference Include="Avalonia.Desktop" Version="0.9.7" />
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.7" />
-    <PackageReference Include="DelegateSerializer" Version="1.0.1" />
     <PackageReference Include="Inflatable.Lastfm" Version="1.1.0.339" />
-    <PackageReference Include="MusicBrainz" Version="1.3.0" />
+    <PackageReference Include="MusicBrainz.Core" Version="1.0.1" />
     <PackageReference Include="taglib" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>

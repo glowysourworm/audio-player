@@ -6,7 +6,7 @@ using System;
 
 namespace AudioPlayer.Model
 {
-    public class LibraryStatistic : ModelBase<LibraryStatistic>
+    public class LibraryStatistic : ModelBase
     {
         readonly Func<ILibraryEntry, IComparable> _keySelector;
         readonly Func<ILibraryEntry, bool> _statisticSelector;

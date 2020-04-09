@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace AudioPlayer.Model
 {
-    public class LibraryManager : ModelBase<LibraryManager>
+    public class LibraryManager : ModelBase
     {
         static Library _library;
         string _status;

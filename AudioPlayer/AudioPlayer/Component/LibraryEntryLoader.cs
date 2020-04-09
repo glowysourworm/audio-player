@@ -27,9 +27,7 @@ namespace AudioPlayer.Component
                 return new LibraryEntry(file)
                 {
                     AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists.Distinct(), x => x),
-                    Composers = new SortedObservableCollection<string, string>(fileRef.Tag.Composers.Distinct(), x => x),
                     Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres.Distinct(), x => x),
-                    Performers = new SortedObservableCollection<string, string>(fileRef.Tag.Performers.Distinct(), x => x),
 
                     Album = Format(fileRef.Tag.Album),
                     Disc = fileRef.Tag.Disc,
@@ -65,9 +63,9 @@ namespace AudioPlayer.Component
             }
 
             // Collections of strings
-            else if (propertyInfo.PropertyType == typeof(IEnumerable<string>))
+            else if (propertyInfo.PropertyType == typeof(SortedObservableCollection<string, string>))
             {
-                var collection = propertyValue as IEnumerable<string>;
+                var collection = propertyValue as SortedObservableCollection<string, string>;
 
                 return collection.Count() == 0;
             }
