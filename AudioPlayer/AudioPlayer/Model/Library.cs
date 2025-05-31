@@ -67,11 +67,23 @@ namespace AudioPlayer.Model
                         {
                             Album = entry.Album,
                             Year = entry.Year,
-                            Duration = entry.Duration,
+                            Duration = entry.Duration
                         };
 
+                        // IImage (Avalonia) appears to use the old System.Drawing Bitmap interface
+                        //
+                        albumEntry.CoverImageSource = entry.AlbumArt.FirstOrDefault();
+
                         // Album -> Track(s)
-                        albumEntry.Tracks.Add(entry);
+                        albumEntry.Tracks.Add(new TitleViewModel()
+                        {
+                            FileName = entry.FileName,
+                            Name = entry.Title,
+                            Track = entry.Track,
+                            Duration = entry.Duration,
+                            NowPlaying = false
+                        });
+
                         artistEntry.Albums.Add(albumEntry);
                     }
                     else
@@ -79,7 +91,14 @@ namespace AudioPlayer.Model
                         // Album -> Track(s)
                         var albumEntry = artistEntry.Albums.First(x => x.Album == entry.Album);
                         albumEntry.Duration.Add(entry.Duration);
-                        albumEntry.Tracks.Add(entry);
+                        albumEntry.Tracks.Add(new TitleViewModel()
+                        {
+                            FileName = entry.FileName,
+                            Name = entry.Title,
+                            Track= entry.Track,
+                            Duration = entry.Duration,
+                            NowPlaying = false
+                        });
                     }
                 }
 
@@ -96,7 +115,19 @@ namespace AudioPlayer.Model
                         Artist = entry.AlbumArtists.First().Name                       
                     };
 
-                    albumEntry.Tracks.Add(entry);
+                    // IImage (Avalonia) appears to use the old System.Drawing Bitmap interface
+                    //
+                    albumEntry.CoverImageSource = entry.AlbumArt.FirstOrDefault();
+                    artistEntry.LatestAlbumCoverSource = entry.AlbumArt.FirstOrDefault();
+
+                    albumEntry.Tracks.Add(new TitleViewModel()
+                    {
+                        FileName = entry.FileName,
+                        Name = entry.Title,
+                        Track = entry.Track,
+                        Duration = entry.Duration,
+                        NowPlaying = false
+                    });
                     artistEntry.Albums.Add(albumEntry);
 
                     this.ValidArtists.Add(artistEntry);

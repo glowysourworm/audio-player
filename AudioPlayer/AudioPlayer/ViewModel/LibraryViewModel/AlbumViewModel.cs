@@ -6,6 +6,7 @@ using AudioPlayer.Model;
 using AudioPlayer.Model.Comparer;
 
 using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace AudioPlayer.ViewModel.LibraryViewModel
 {
@@ -17,8 +18,8 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
         string _album;
         uint _year;
         TimeSpan _duration;
-        Image _coverImage;
-        SortedObservableCollection<LibraryEntry> _tracks;
+        IImage _coverImageSource;
+        SortedObservableCollection<TitleViewModel> _tracks;
 
         public string Album
         {
@@ -30,17 +31,17 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
             get { return _year; }
             set { this.SetProperty(ref _year, value); }
         }
-        public Image CoverImage
+        public IImage CoverImageSource
         {
-            get { return _coverImage; }
-            set { this.SetProperty(ref _coverImage, value); }
+            get { return _coverImageSource; }
+            set { this.SetProperty(ref _coverImageSource, value); }
         }
         public TimeSpan Duration
         {
             get { return _duration; }
             set { this.SetProperty(ref _duration, value); }
         }
-        public SortedObservableCollection<LibraryEntry> Tracks
+        public SortedObservableCollection<TitleViewModel> Tracks
         {
             get { return _tracks; }
             set { this.SetProperty(ref _tracks, value); }
@@ -49,10 +50,10 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
         public AlbumViewModel()
         {
             this.Album = string.Empty;
-            this.CoverImage = null;
+            this.CoverImageSource = null;
             this.Duration = new TimeSpan();
             this.Year = 0;
-            this.Tracks = new SortedObservableCollection<LibraryEntry>(new TrackNumberComparer());
+            this.Tracks = new SortedObservableCollection<TitleViewModel>(new TrackNumberComparer());
         }
     }
 }

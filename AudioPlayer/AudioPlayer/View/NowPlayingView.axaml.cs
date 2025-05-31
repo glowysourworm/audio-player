@@ -1,19 +1,25 @@
+using System.Collections.Generic;
 using System.Linq;
 
+using AudioPlayer.Controller;
+using AudioPlayer.Controller.Interface;
 using AudioPlayer.Model;
 using AudioPlayer.ViewModel.LibraryViewModel;
 
-using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
 
 namespace AudioPlayer;
 
 public partial class NowPlayingView : UserControl
 {
+    // TODO: Dependency Injection
+    readonly IAudioController _audioController;
+
     public NowPlayingView()
     {
         InitializeComponent();
+
+        _audioController = new AudioController();
     }
 
     private void OnArtistSelectionChanged(object? sender, Avalonia.Controls.SelectionChangedEventArgs e)
@@ -22,24 +28,27 @@ public partial class NowPlayingView : UserControl
 
         if (e.AddedItems.Count > 0 && library != null)
         {
-            var artistViewModel = e.AddedItems[0] as ArtistViewModel;
-
             // View Artist Detail
-            this.ArtistDetailLB.ItemsSource = artistViewModel.Albums;
+            this.ArtistDetailLB.ItemsSource = (e.AddedItems[0] as ArtistViewModel).Albums;
         }
     }
 
     private void OnArtistDetailDoubleClick(object? sender, Avalonia.Input.TappedEventArgs e)
     {
-        var libraryEntry = (e.Source as Control).DataContext as LibraryEntry;
-        var library = this.DataContext as Library;
+        var selectedTrack = (e.Source as Control).DataContext as TitleViewModel;
 
-        if (libraryEntry != null)
+        if (selectedTrack != null)
         {
-            // Load album for this title into playlist / start playing this title
-            var artistAlbumTracks = library.ValidTitles.Where(x => x.Album == libraryEntry.Album).ToList();
+            var albums = this.ArtistDetailLB.ItemsSource as IEnumerable<AlbumViewModel>;
+            var selectedAlbum = albums.First(album => album.Tracks.Contains(selectedTrack));
 
-            this.PlaylistLB.ItemsSource = artistAlbumTracks;
+            foreach (var track in albums.SelectMany(x => x.Tracks))
+            {
+                track.NowPlaying = (track == selectedTrack);
+            }
+
+            // Play Selected Track
+            _audioController.Play(selectedTrack.FileName);
         }
     }
 }

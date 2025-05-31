@@ -31,6 +31,7 @@
     <PackageReference Include="Inflatable.Lastfm" Version="1.2.0" />
     <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageReference Include="MusicBrainz.Core" Version="1.0.1" />
+    <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="System.Security.Permissions" Version="9.0.5" />
     <PackageReference Include="taglib" Version="2.1.0" />
   </ItemGroup>

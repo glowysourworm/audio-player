@@ -31,7 +31,7 @@ namespace AudioPlayer.Component
                     })),
                     Genres = new SortedObservableCollection<string>(fileRef.Tag.Genres.Where(z => !string.IsNullOrEmpty(z)).Distinct()),
 
-                    AlbumArt = new SortedObservableCollection<SerializableBitmap>(fileRef.Tag.Pictures.Select(x => SerializableBitmap.ReadIPicture(x))),
+                    //AlbumArt = new SortedObservableCollection<SerializableBitmap>(fileRef.Tag.Pictures.Select(x => SerializableBitmap.ReadIPicture(x))),
                     Album = Format(fileRef.Tag.Album),
                     Disc = fileRef.Tag.Disc,
                     DiscCount = fileRef.Tag.DiscCount,

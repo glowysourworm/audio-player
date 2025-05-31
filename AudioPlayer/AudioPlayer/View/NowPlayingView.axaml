@@ -6,10 +6,10 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="AudioPlayer.NowPlayingView">
 
-	<Grid Grid.ColumnDefinitions="300,*,300">
+	<Grid Grid.ColumnDefinitions="300,*">
 
 		<!-- Artist List -->
-		<ListBox x:Name="ArtistLB" ItemsSource="{Binding ValidArtists}" SelectionChanged="OnArtistSelectionChanged">
+		<ListBox x:Name="ArtistLB" ItemsSource="{Binding ValidArtists}" SelectionChanged="OnArtistSelectionChanged" Background="AliceBlue">
 			
 			<ListBox.ItemsPanel>
 				<ItemsPanelTemplate>
@@ -21,14 +21,14 @@
 				<DataTemplate>
 					<StackPanel Orientation="Horizontal">
 
-						<Image Height="24" Width="24" />
+						<Image Source="{Binding LatestAlbumCoverSource}" Height="50" Width="50" VerticalAlignment="Top" Margin="5" />
 
 						<StackPanel>
 							<TextBlock Text="{Binding Artist}" FontSize="14" Margin="5" />
 
-							<StackPanel Orientation="Horizontal">
-								<TextBlock Text="{Binding Albums.Count}" Margin="5" FontSize="10" />
-								<TextBlock Text=" Album(s)" Margin="5" FontSize="10" />
+							<StackPanel Orientation="Horizontal" Margin="0 5">
+								<TextBlock Text="{Binding Albums.Count}" Margin="5 0" FontSize="10" />
+								<TextBlock Text=" Album(s)" Margin="5 0" FontSize="10" />
 							</StackPanel>
 							
 						</StackPanel>
@@ -39,41 +39,12 @@
 		</ListBox>
 
 		<!-- Artist Detail (List of Album Details) -->
-		<ListBox x:Name="ArtistDetailLB" Grid.Column="1" DoubleTapped="OnArtistDetailDoubleClick">
-			
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<VirtualizingStackPanel />
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
+		<ListBox x:Name="ArtistDetailLB" Grid.Column="1" DoubleTapped="OnArtistDetailDoubleClick"  ScrollViewer.IsScrollInertiaEnabled="False">
 
 			<ListBox.ItemTemplate>
 				<DataTemplate>
 					<view:AlbumView />
 				</DataTemplate>				
-			</ListBox.ItemTemplate>
-
-		</ListBox>
-
-		<!-- Play List -->
-		<ListBox x:Name="PlaylistLB" Grid.Column="2">
-			
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<VirtualizingStackPanel />
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
-
-			<ListBox.ItemTemplate>
-				<DataTemplate>
-					<StackPanel Orientation="Horizontal">
-						<TextBlock Text="{Binding AlbumArtistsJoined}" Margin="0, 0, 4, 0" FontSize="14" />
-						<TextBlock Text=" - " Margin="0, 0, 4, 0" FontSize="14" />
-						<TextBlock Text="{Binding Album}" Margin="0, 0, 4, 0" FontSize="14" />
-						<TextBlock Text=" - " Margin="0, 0, 4, 0" FontSize="14" />
-						<TextBlock Text="{Binding Title}" Margin="0, 0, 4, 0" FontSize="14" />
-					</StackPanel>
-				</DataTemplate>
 			</ListBox.ItemTemplate>
 
 		</ListBox>

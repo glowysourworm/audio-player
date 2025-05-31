@@ -3,6 +3,7 @@
 using AudioPlayer.Model;
 
 using Avalonia.Controls;
+using Avalonia.Media;
 
 namespace AudioPlayer.ViewModel.LibraryViewModel
 {
@@ -13,7 +14,7 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
     {
         string _artist;
         ObservableCollection<AlbumViewModel> _albums;
-        Image _latestAlbumCover;
+        IImage _latestAlbumCoverSource;
 
         public string Artist
         {
@@ -25,17 +26,17 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
             get { return _albums; }
             set { this.SetProperty(ref _albums, value); }
         }
-        public Image LatestAlbumCover
+        public IImage LatestAlbumCoverSource
         {
-            get { return _latestAlbumCover; }
-            set { this.SetProperty(ref _latestAlbumCover, value); }
+            get { return _latestAlbumCoverSource; }
+            set { this.SetProperty(ref _latestAlbumCoverSource, value); }
         }
 
         public ArtistViewModel()
         {
             this.Artist = string.Empty;
             this.Albums = new ObservableCollection<AlbumViewModel>();
-            this.LatestAlbumCover = new Image();
+            this.LatestAlbumCoverSource = null;
         }
     }
 }
