@@ -5,6 +5,7 @@ using System.Reflection;
 
 using AudioPlayer.Extension;
 using AudioPlayer.Model;
+using AudioPlayer.Model.Database;
 
 namespace AudioPlayer.Component
 {
@@ -24,12 +25,17 @@ namespace AudioPlayer.Component
 
                 return new LibraryEntry(file)
                 {
-                    AlbumArtists = new SortedObservableCollection<string, string>(fileRef.Tag.AlbumArtists.Distinct(), x => x),
-                    Genres = new SortedObservableCollection<string, string>(fileRef.Tag.Genres.Distinct(), x => x),
+                    AlbumArtists = new SortedObservableCollection<Artist>(fileRef.Tag.AlbumArtists.Where(z => !string.IsNullOrEmpty(z)).Distinct().Select(x => new Artist()
+                    {
+                        Name = x
+                    })),
+                    Genres = new SortedObservableCollection<string>(fileRef.Tag.Genres.Where(z => !string.IsNullOrEmpty(z)).Distinct()),
 
+                    AlbumArt = new SortedObservableCollection<SerializableBitmap>(fileRef.Tag.Pictures.Select(x => SerializableBitmap.ReadIPicture(x))),
                     Album = Format(fileRef.Tag.Album),
                     Disc = fileRef.Tag.Disc,
                     DiscCount = fileRef.Tag.DiscCount,
+                    Duration = fileRef.Properties.Duration,
                     Title = Format(fileRef.Tag.Title),
                     Track = fileRef.Tag.Track,
                     Year = fileRef.Tag.Year
@@ -61,9 +67,9 @@ namespace AudioPlayer.Component
             }
 
             // Collections of strings
-            else if (propertyInfo.PropertyType == typeof(SortedObservableCollection<string, string>))
+            else if (propertyInfo.PropertyType == typeof(SortedObservableCollection<string>))
             {
-                var collection = propertyValue as SortedObservableCollection<string, string>;
+                var collection = propertyValue as SortedObservableCollection<string>;
 
                 return collection.Count() == 0;
             }

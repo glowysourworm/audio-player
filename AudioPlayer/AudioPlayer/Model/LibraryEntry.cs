@@ -2,11 +2,13 @@
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
 using AudioPlayer.Component;
 using AudioPlayer.Event;
 using AudioPlayer.Extension;
 using AudioPlayer.Model.Command;
+using AudioPlayer.Model.Database;
 using AudioPlayer.Model.Vendor;
 using AudioPlayer.ViewModel;
 
@@ -18,8 +20,9 @@ namespace AudioPlayer.Model
         public event SimpleEventHandler<string, LogMessageSeverity> LogEvent;
 
         #region (private) Backing Fields
-        SortedObservableCollection<string, string> _albumArtists;
-        SortedObservableCollection<string, string> _genres;
+        SortedObservableCollection<Artist> _albumArtists;
+        SortedObservableCollection<string> _genres;
+        SortedObservableCollection<SerializableBitmap> _albumArt;
 
         string _fileName;
         string _album;
@@ -28,9 +31,10 @@ namespace AudioPlayer.Model
         uint _track;
         uint _disc;
         uint _discCount;
+        TimeSpan _duration;
 
         // Music Brainz
-        ObservableCollection<MusicBrainzRecord> _musicBrainzResults;            // Not Serialized
+        SortedObservableCollection<MusicBrainzRecord> _musicBrainzResults;            // Not Serialized (yet)
         MusicBrainzRecord _musicBrainzRecord;
 
         // Problems
@@ -50,7 +54,10 @@ namespace AudioPlayer.Model
             get { return _fileName; }
             private set { SetProperty(ref _fileName, value); }
         }
-
+        public string PrimaryArtist
+        {
+            get { return _albumArtists.FirstOrDefault()?.Name ?? string.Empty; }
+        }
         public string Album
         {
             get { return _album; }
@@ -81,13 +88,23 @@ namespace AudioPlayer.Model
             get { return _discCount; }
             set { SetProperty(ref _discCount, value); }
         }
+        public TimeSpan Duration
+        {
+            get { return _duration; }
+            set { this.SetProperty(ref _duration, value); }
+        }
 
-        public SortedObservableCollection<string, string> AlbumArtists
+        public SortedObservableCollection<Artist> AlbumArtists
         {
             get { return _albumArtists; }
             set { SetProperty(ref _albumArtists, value); }
         }
-        public SortedObservableCollection<string, string> Genres
+        public SortedObservableCollection<SerializableBitmap> AlbumArt
+        {
+            get { return _albumArt; }
+            set { this.SetProperty(ref _albumArt, value); }
+        }
+        public SortedObservableCollection<string> Genres
         {
             get { return _genres; }
             set { SetProperty(ref _genres, value); }
@@ -113,7 +130,7 @@ namespace AudioPlayer.Model
             get { return _fileLoadErrorMessage; }
             set { this.SetProperty(ref _fileLoadErrorMessage, value); }
         }
-        public ObservableCollection<MusicBrainzRecord> MusicBrainzResults
+        public SortedObservableCollection<MusicBrainzRecord> MusicBrainzResults
         {
             get { return _musicBrainzResults; }
             set { this.SetProperty(ref _musicBrainzResults, value); }
@@ -146,9 +163,11 @@ namespace AudioPlayer.Model
 
         public LibraryEntry(string file)
         {
+            this.AlbumArt = new SortedObservableCollection<SerializableBitmap>();
+            this.AlbumArtists = new SortedObservableCollection<Artist>();
             this.FileName = file;
             this.MusicBrainzRecord = MusicBrainzRecord.Empty;
-            this.MusicBrainzResults = new ObservableCollection<MusicBrainzRecord>();
+            this.MusicBrainzResults = new SortedObservableCollection<MusicBrainzRecord>();
 
             this.MusicBrainzRecord.PropertyChanged += MusicBrainzRecord_PropertyChanged;
 
@@ -156,28 +175,7 @@ namespace AudioPlayer.Model
 
             this.QueryMusicBrainzCommand = new ModelCommand(async () =>
             {
-                try
-                {
-                    OnLog("Querying MusicBrainz (remote): Title:  {0}", LogMessageSeverity.Info, this.Title);
-
-                    // Music Brainz!
-                    //
-                    var records = await MusicBrainzClient.Query(this);
-
-                    // TODO: Need Best Record Matcher
-                    this.MusicBrainzRecord = records.FirstOrDefault() ?? MusicBrainzRecord.Empty;
-
-                    foreach (var record in records)
-                    {
-                        this.MusicBrainzResults.Add(record);
-                    }
-
-                    OnLog("MusicBrainz Query Finished: {0} Results (arranged by score)", LogMessageSeverity.Info, records.Count());
-                }
-                catch (Exception ex)
-                {
-                    OnLog("Music Brainz Error:  {0}", LogMessageSeverity.Error, ex.Message);
-                }
+                await QueryMusicBrainz();
             });
         }
 
@@ -191,6 +189,32 @@ namespace AudioPlayer.Model
             // Dependent Properties
             this.OnPropertyChanged("MusicBrainzRecord");        // Bubble up property changes
             this.OnPropertyChanged("MusicBrainzRecordValid");   // Calculated property
+        }
+
+        private async Task QueryMusicBrainz()
+        {
+            try
+            {
+                OnLog("Querying MusicBrainz (remote): Title:  {0}", LogMessageSeverity.Info, this.Title);
+
+                // Music Brainz!
+                //
+                var records = await MusicBrainzClient.Query(this);
+
+                // TODO: Need Best Record Matcher
+                this.MusicBrainzRecord = records.FirstOrDefault() ?? MusicBrainzRecord.Empty;
+
+                foreach (var record in records)
+                {
+                    this.MusicBrainzResults.Add(record);
+                }
+
+                OnLog("MusicBrainz Query Finished: {0} Results (arranged by score)", LogMessageSeverity.Info, records.Count());
+            }
+            catch (Exception ex)
+            {
+                OnLog("Music Brainz Error:  {0}", LogMessageSeverity.Error, ex.Message);
+            }
         }
 
         private void OnLog(string message, LogMessageSeverity severity, params object[] args)
@@ -209,8 +233,8 @@ namespace AudioPlayer.Model
             this.Track = info.GetUInt32("Track");
             this.Disc = info.GetUInt32("Disc");
             this.DiscCount = info.GetUInt32("DiscCount");
-            this.AlbumArtists = (SortedObservableCollection<string, string>)info.GetValue("AlbumArtists", typeof(SortedObservableCollection<string, string>));
-            this.Genres = (SortedObservableCollection<string, string>)info.GetValue("Genres", typeof(SortedObservableCollection<string, string>));
+            this.AlbumArtists = (SortedObservableCollection<Artist>)info.GetValue("AlbumArtists", typeof(SortedObservableCollection<Artist>));
+            this.Genres = (SortedObservableCollection<string>)info.GetValue("Genres", typeof(SortedObservableCollection<string>));
 
             this.FileMissing = info.GetBoolean("FileMissing");
             this.FileLoadError = info.GetBoolean("FileLoadError");

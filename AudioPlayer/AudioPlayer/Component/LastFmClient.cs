@@ -29,7 +29,7 @@ namespace AudioPlayer.Component
                     var client = new LastfmClient(WebConfiguration.LastFmAPIKey, WebConfiguration.LastFmAPISecret);
 
                     // Web Call ...
-                    var response = await client.Album.GetInfoAsync(entry.AlbumArtists.First(), entry.Album, false);
+                    var response = await client.Album.GetInfoAsync(entry.AlbumArtists.First().Name, entry.Album, false);
 
                     // Status OK -> Create bitmap image from the url
                     if (response.Status == LastResponseStatus.Successful &&

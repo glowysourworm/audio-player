@@ -1,31 +1,41 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 
-using AudioPlayer.Component;
 using AudioPlayer.Event;
-using AudioPlayer.Extension;
 using AudioPlayer.ViewModel;
+using AudioPlayer.ViewModel.LibraryViewModel;
 
 namespace AudioPlayer.Model
 {
     [Serializable]
     public class Library : ModelBase
     {
-        SortedObservableCollection<string, LibraryEntry> _selectedStatistic;
+        public event SimpleEventHandler<string, LogMessageType, LogMessageSeverity> LogEvent;
 
         /// <summary>
-        /// Set of problems associated with getting all tag data properly read, and installed, for
-        /// each of the library entries
+        /// List of all library entries (non-grouped / sorted)
         /// </summary>
-        public ObservableCollection<LibraryStatistic> Problems { get; set; }
-
         public ObservableCollection<LibraryEntry> AllTitles { get; set; }
 
-        public event SimpleEventHandler<string, LogMessageType, LogMessageSeverity> LogEvent;
+        /// <summary>
+        /// Titles that have adequate information to be used by AudioPlayer, to play and organize,
+        /// library entries.
+        /// </summary>
+        public ObservableCollection<LibraryEntry> ValidTitles { get; set; }
+
+        /// <summary>
+        /// Valid titles will add entries to this list - one per artist
+        /// </summary>
+        public ObservableCollection<ArtistViewModel> ValidArtists { get; set; }
 
         public Library()
         {
-            Initialize();
+            this.AllTitles = new ObservableCollection<LibraryEntry>();
+            this.ValidTitles = new ObservableCollection<LibraryEntry>();
+            this.ValidArtists = new ObservableCollection<ArtistViewModel>();
         }
 
         /// <summary>
@@ -36,33 +46,76 @@ namespace AudioPlayer.Model
             // All Titles
             this.AllTitles.Add(entry);
 
-            // Statistics 
-            foreach (var statistic in this.Problems)
-                statistic.FilteredAdd(entry);
+            var valid = ValidateEntry(entry);
+
+            // Valid Titles (At least one artist, valid track data, etc..)
+            if (valid)
+                this.ValidTitles.Add(entry);
+
+            // Valid Artists
+            if (valid)
+            {
+                var artistEntry = this.ValidArtists.FirstOrDefault(x => x.Artist == entry.AlbumArtists.First().Name);
+
+                // Existing
+                if (artistEntry != null)
+                {
+                    // Artist -> Album(s)
+                    if (!artistEntry.Albums.Any(x => x.Album == entry.Album))
+                    {
+                        var albumEntry = new AlbumViewModel()
+                        {
+                            Album = entry.Album,
+                            Year = entry.Year,
+                            Duration = entry.Duration,
+                        };
+
+                        // Album -> Track(s)
+                        albumEntry.Tracks.Add(entry);
+                        artistEntry.Albums.Add(albumEntry);
+                    }
+                    else
+                    {
+                        // Album -> Track(s)
+                        var albumEntry = artistEntry.Albums.First(x => x.Album == entry.Album);
+                        albumEntry.Duration.Add(entry.Duration);
+                        albumEntry.Tracks.Add(entry);
+                    }
+                }
+
+                // New
+                else
+                {
+                    var albumEntry = new AlbumViewModel()
+                    {
+                        Album = entry.Album,
+                        Year = entry.Year
+                    };
+                    artistEntry = new ArtistViewModel()
+                    {
+                        Artist = entry.AlbumArtists.First().Name                       
+                    };
+
+                    albumEntry.Tracks.Add(entry);
+                    artistEntry.Albums.Add(albumEntry);
+
+                    this.ValidArtists.Add(artistEntry);
+                }
+            }
 
             // Log Events (TODO: Remove these, or change this library into an IEnumerable<LibraryEntry>)
             entry.LogEvent += OnEntryLog;
         }
 
-        private void Initialize()
+        private bool ValidateEntry(LibraryEntry entry)
         {
-            this.AllTitles = new ObservableCollection<LibraryEntry>();
-            this.Problems = new ObservableCollection<LibraryStatistic>();
-
-            // Statistics
-            /*
-            this.Problems.Add(new LibraryStatistic("Files Scanned", x => x.FileName, x => true));
-
-            this.Problems.Add(new LibraryStatistic("Album Unknown", x => x.FileName, x => x.IsUnknown(z => z.Album)));
-            this.Problems.Add(new LibraryStatistic("Album Artist Unknown", x => x.FileName, x => x.IsUnknown(z => z.AlbumArtists)));
-            this.Problems.Add(new LibraryStatistic("Genre Unknown", x => x.FileName, x => x.IsUnknown(z => z.Genres)));
-            this.Problems.Add(new LibraryStatistic("Title Unknown", x => x.FileName, x => x.IsUnknown(z => z.Title)));
-            this.Problems.Add(new LibraryStatistic("Year Unknown", x => x.FileName, x => x.IsUnknown(z => z.Year)));
-            this.Problems.Add(new LibraryStatistic("Track Unknown", x => x.FileName, x => x.IsUnknown(z => z.Track)));
-            this.Problems.Add(new LibraryStatistic("Disc Unknown", x => x.FileName, x => x.IsUnknown(z => z.Disc)));
-            this.Problems.Add(new LibraryStatistic("Disc Count Unknown", x => x.FileName, x => x.IsUnknown(z => z.DiscCount)));
-            //this.Problems.Add(new LibraryStatistic("Artwork Found", x => x.FileName, x => _libraryFile.ContainsArtworkFor(x)));
-            */
+            return entry != null &&
+                   !string.IsNullOrEmpty(entry.FileName) &&
+                   File.Exists(entry.FileName) &&
+                   !string.IsNullOrEmpty(entry.Album) &&
+                   entry.AlbumArtists.Any() &&
+                   entry.AlbumArtists.All(x => !string.IsNullOrEmpty(x.Name)) &&
+                   !string.IsNullOrEmpty(entry.AlbumArtists.First().Name);
         }
 
         private void OnEntryLog(string item1, LogMessageSeverity item2)

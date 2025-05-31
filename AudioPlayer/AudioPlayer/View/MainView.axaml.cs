@@ -15,6 +15,7 @@ public partial class MainView : UserControl
         // Bindings weren't working (tried ViewLocator, CompiledBindings)
         this.ConfigurationView.DataContext = (this.DataContext as MainViewModel).Configuration;
         this.ManagerView.DataContext = this.DataContext;
+        this.NowPlayingView.DataContext = (this.DataContext as MainViewModel).Library;
         this.OutputLB.ItemsSource = (this.DataContext as MainViewModel).OutputMessages;
         
     }

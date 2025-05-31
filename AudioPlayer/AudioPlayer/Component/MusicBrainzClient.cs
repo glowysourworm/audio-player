@@ -19,7 +19,7 @@ namespace AudioPlayer.Component
             return Task.Run<IEnumerable<MusicBrainzRecord>>(() =>
             {
                 return MusicBrainz.Search
-                              .Recording(entry.Title, artist: entry.AlbumArtists.FirstOrDefault(), release: entry.Album)
+                              .Recording(entry.Title, artist: entry.AlbumArtists.FirstOrDefault().Name, release: entry.Album)
                               .Data
                               .Select(result => new
                               {
@@ -55,7 +55,7 @@ namespace AudioPlayer.Component
                               .Select(x => new MusicBrainzRecord(x.Id)
                               {
                                   Album = x.Release,
-                                  AlbumArtists = new SortedObservableCollection<string, string>(x.Artists, x => x),
+                                  AlbumArtists = new SortedObservableCollection<string>(x.Artists),
                                   MusicBrainzReleaseCountry = x.Country,
                                   MusicBrainzReleaseStatus = x.Status,
                                   Title = x.Title,

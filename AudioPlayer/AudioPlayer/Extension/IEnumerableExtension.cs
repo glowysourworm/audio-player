@@ -15,14 +15,14 @@ namespace AudioPlayer.Extension
             return collection.ToList();
         }
 
-        /// <summary>
-        /// Returns filtered collection using the provided distinctness selector
-        /// </summary>
-        public static IEnumerable<T> DistinctBy<T, TDistinct>(this IEnumerable<T> collection,
-                                                                   Func<T, TDistinct> distinctSelector) where TDistinct : IComparable
-        {
-            return collection.GroupBy(item => distinctSelector(item))
-                             .Select(group => group.First());
-        }
+        ///// <summary>
+        ///// Returns filtered collection using the provided distinctness selector
+        ///// </summary>
+        //public static IEnumerable<T> DistinctBy<T, TDistinct>(this IEnumerable<T> collection,
+        //                                                           Func<T, TDistinct> distinctSelector) where TDistinct : IComparable
+        //{
+        //    return collection.GroupBy(item => distinctSelector(item))
+        //                     .Select(group => group.First());
+        //}
     }
 }

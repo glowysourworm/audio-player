@@ -4,6 +4,8 @@ using System;
 using System.IO;
 using System.Runtime.Serialization;
 
+using TagLib;
+
 namespace AudioPlayer.Model.Database
 {
     [Serializable]
@@ -16,6 +18,14 @@ namespace AudioPlayer.Model.Database
         public SerializableBitmap(Stream stream) : base(stream)
         {
 
+        }
+
+        public static SerializableBitmap ReadIPicture(IPicture picture)
+        {
+            using (var stream = new MemoryStream(picture.Data.Data))
+            {
+                return new SerializableBitmap(stream);
+            }
         }
 
         public SerializableBitmap(SerializationInfo info, StreamingContext context) :

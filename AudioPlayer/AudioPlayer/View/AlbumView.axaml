@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 Background="White"
+             x:Class="AudioPlayer.AlbumView">
+	<Grid Grid.ColumnDefinitions="Auto,*" Grid.RowDefinitions="Auto,*">
+		
+		<Image Source="{Binding CoverImage}" Height="128" Width="128" Grid.RowSpan="2" />
+
+		<Grid Grid.RowDefinitions="Auto,Auto" Grid.Column="1">
+
+			<!-- Album Banner -->
+			<TextBlock Text="{Binding Album}" HorizontalAlignment="Left" FontSize="14" Foreground="DarkGray" Margin="3" />
+
+			<!-- Album Year / Genre / Other Details... -->
+			<TextBlock Text="{Binding Year}" HorizontalAlignment="Left" FontSize="12" Foreground="LightGray" Grid.Row="1" Margin="3" />
+			<TextBlock Text="{Binding Duration}" HorizontalAlignment="Right" FontSize="12" Foreground="LightGray" Grid.Row="1" Margin="3" />
+			
+		</Grid>
+
+		<ListBox ItemsSource="{Binding Tracks}" Grid.Column="1" Grid.Row="1">
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Grid Grid.ColumnDefinitions="Auto,*,Auto">
+						<TextBlock Text="{Binding Track}" FontSize="12" Foreground="Gray" Margin="3" />
+						<TextBlock Text="{Binding Title}" Grid.Column="1" FontSize="12" Foreground="Gray" Margin="3" />
+						<TextBlock Text="{Binding Duration}" Grid.Column="2" FontSize="12" Foreground="Gray" Margin="3" />
+					</Grid>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		
+	</Grid>
+</UserControl>

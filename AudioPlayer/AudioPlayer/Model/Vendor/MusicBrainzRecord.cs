@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 using AudioPlayer.Extension;
 
@@ -13,8 +14,8 @@ namespace AudioPlayer.Model.Vendor
         public static MusicBrainzRecord Empty;
 
         #region (private) Backing Fields
-        SortedObservableCollection<string, string> _albumArtists;
-        SortedObservableCollection<string, string> _genres;
+        SortedObservableCollection<string> _albumArtists;
+        SortedObservableCollection<string> _genres;
 
         string _musicBrainzRecordingId;
         string _musicBrainzReleaseCountry;
@@ -78,12 +79,12 @@ namespace AudioPlayer.Model.Vendor
             set { SetProperty(ref _discCount, value); }
         }
 
-        public SortedObservableCollection<string, string> AlbumArtists
+        public SortedObservableCollection<string> AlbumArtists
         {
             get { return _albumArtists; }
             set { SetProperty(ref _albumArtists, value); }
         }
-        public SortedObservableCollection<string, string> Genres
+        public SortedObservableCollection<string> Genres
         {
             get { return _genres; }
             set { SetProperty(ref _genres, value); }
@@ -113,6 +114,8 @@ namespace AudioPlayer.Model.Vendor
         {
             this.MusicBrainzRecordingId = recordingId;
             this.Timestamp = DateTime.Now;
+            this.AlbumArtists = new SortedObservableCollection<string>();
+            this.Genres = new SortedObservableCollection<string>();
         }
     }
 }

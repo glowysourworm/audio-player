@@ -8,264 +8,362 @@ using System.Runtime.Serialization;
 namespace AudioPlayer.Extension
 {
     /// <summary>
-    /// Collection implementation that supports binding and sorting by default.
+    /// A simple ordered list implementation - sorts items when inserted and removed. NOTE*** The binding views seemed to "want"
+    /// the IList implementation (!!!?) It must've been required for bindings to operate.
     /// </summary>
     [Serializable]
-    public class SortedObservableCollection<K, T> : IList<T>, ICollection<T>, IEnumerable<T>,
-                                                    INotifyCollectionChanged,
-                                                    INotifyPropertyChanged,
-                                                    ISerializable
-                                                    where K : IComparable
+    public class SortedObservableCollection<T> : IList<T>, IList, INotifyPropertyChanged, INotifyCollectionChanged, ISerializable
     {
-        public event PropertyChangedEventHandler PropertyChanged;
         public event NotifyCollectionChangedEventHandler CollectionChanged;
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        List<K> _keys;
-        List<T> _values;
-        Dictionary<K, T> _dict;
+        /// <summary>
+        /// Protected list of items
+        /// </summary>
+        protected List<T> ItemList { get; private set; }
 
-        public int Count { get { return _keys.Count; } }
+        /// <summary>
+        /// Equality comparer for sorting
+        /// </summary>
+        protected Comparer<T> ItemComparer { get; private set; }
 
-        public bool IsReadOnly { get { return false; } }
-
-        public T this[int index] 
-        {
-            get { return _values[index]; }
-            set { throw new NotSupportedException("Please use Add method to insert items"); } 
-        }
-
-        public T this[K key]
-        {
-            get { return _dict[key]; }
-            set { throw new NotSupportedException("Not supported -> please use the Add method"); }
-        }
+        const int UNSUCCESSFUL_SEARCH = -1;
 
         public SortedObservableCollection()
         {
-            _dict = new Dictionary<K, T>();
-            _keys = new List<K>();
-            _values = new List<T>();
+            this.ItemList = new List<T>();
+            this.ItemComparer = Comparer<T>.Default;
+
+            OnPropertyChanged("Count");
         }
 
-        public SortedObservableCollection(IEnumerable<T> collection, Func<T, K> keySelector)
+        public SortedObservableCollection(Comparer<T> comparer)
         {
-            _dict = new Dictionary<K, T>();
-            _keys = new List<K>();
-            _values = new List<T>();
+            this.ItemList = new List<T>();
+            this.ItemComparer = comparer;
 
-            // Load collections
-            foreach (var item in collection)
-                Add(keySelector(item), item);
+            OnPropertyChanged("Count");
+        }
+
+        public SortedObservableCollection(IEnumerable<T> items)
+        {
+            this.ItemList = new List<T>(items);
+            this.ItemComparer = Comparer<T>.Default;
+        }
+
+        public SortedObservableCollection(IEnumerable<T> items, Comparer<T> itemComparer)
+        {
+            this.ItemList = new List<T>(items);
+            this.ItemComparer = itemComparer;
         }
 
         public SortedObservableCollection(SerializationInfo info, StreamingContext context)
         {
-            _dict = new Dictionary<K, T>();
-            _keys = new List<K>();
-            _values = new List<T>();
-
-            // UNSORTED
-            var count = info.GetInt32("Count");
-
-            // (SORT) Populate private collections from deserialized items
-            for (int i=0;i<count;i++)
-            {
-                var key = (K)info.GetValue("Key" + i, typeof(K));
-                var value = (T)info.GetValue("Value" + i, typeof(T));
-
-                Add(key, value);
-            }
+            this.ItemList = (List<T>)info.GetValue("List", typeof(List<T>));
+            this.ItemComparer = (Comparer<T>)info.GetValue("Comparer", typeof(Comparer<T>));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            // UNSORTED
-            info.AddValue("Count", _dict.Count);
+            info.AddValue("List", this.ItemList);
+            info.AddValue("Comparer", this.ItemComparer);
+        }
 
-            var counter = 0;
+        public void AddRange(IEnumerable<T> items)
+        {
+            foreach (T item in items)
+                Add(item);              // Notify
+        }
 
-            foreach (var element in _dict)
+        // Functions Watched:  Add, Remove, RemoveAt, Clear
+        private void OnCollectionChanged_Add(T item, int index)
+        {
+            if (this.CollectionChanged != null)
             {
-                info.AddValue("Key" + counter, element.Key);
-                info.AddValue("Value" + counter++, element.Value);
+                this.CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, item, index));
+            }
+
+            // Also -> Property Changed (Count)
+            OnPropertyChanged("Count");
+        }
+        private void OnCollectionChanged_Remove(T item, int index)
+        {
+            if (this.CollectionChanged != null)
+            {
+                this.CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, item, index));
+            }
+
+            // Also -> Property Changed (Count)
+            OnPropertyChanged("Count");
+        }
+        private void OnCollectionChanged_Clear(IList<T> removedItems)
+        {
+            if (this.CollectionChanged != null)
+            {
+                this.CollectionChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset, removedItems));
+            }
+
+            // Also -> Property Changed (Count)
+            OnPropertyChanged("Count");
+        }
+
+        // Functions Watched:  Count (also, follows collection changes)
+        private void OnPropertyChanged(string name)
+        {
+            if (this.PropertyChanged != null)
+            {
+                this.PropertyChanged(this, new PropertyChangedEventArgs(name));
             }
         }
 
-        public void Add(T value)
+        #region (public) IList<T> IList
+
+        public T this[int index]
         {
-            throw new NotSupportedException("Please use Add(T, Func<T, K>) method with key selector");
+            get { return this.ItemList[index]; }
+            set { throw new Exception("Manual insert not supported for SimpleOrderedList<>"); }
         }
 
-        public void Add(T value, Func<T, K> keySelector)
+        public int Count
         {
-            Add(keySelector(value), value);
+            get { return this.ItemList.Count; }
         }
 
-        protected void Add(K key, T value)
+        public bool IsSynchronized
         {
-            // Procedure
-            //
-            // 1) Perform binary search by key
-            // 2) Perform "Insert"
-            //      - Notify Add using the index
-            //
-
-            // Binary search for the insert location
-            var index = _keys.Count > 0 ? BinarySearch(key, 0, _keys.Count - 1)
-                                        : 0;
-
-            _keys.Insert(index, key);
-            _values.Insert(index, value);
-
-            // DICTIONARY NOT SORTED
-            _dict.Add(key, value);
-
-            OnInsert(value, index);
-            OnPropertyChanged("Count");
+            get { return false; }
         }
 
-        public bool Remove(T item)
+        public bool IsReadOnly
         {
-            throw new NotSupportedException("Please use the Remove(T, Func<T, K>) with key selector");
+            get { return false; }
         }
 
-        public bool Remove(T item, Func<T, K> keySelector)
+        public bool IsFixedSize
         {
-            return Remove(keySelector(item));
+            get { return false; }
         }
 
-        protected bool Remove(K key)
+        public object SyncRoot
         {
-            // Fetch index of item
-            var index = _keys.IndexOf(key);
-
-            // Fetch item
-            var item = _dict[key];
-
-            // Remove the item
-            _keys.RemoveAt(index);
-            _values.RemoveAt(index);
-            _dict.Remove(key);
-
-            // Notify collection changed
-            OnRemove(item, index);
-            OnPropertyChanged("Count");
-
-            return true;
+            get { return this; }
         }
 
-        public bool ContainsKey(K key)
+        object IList.this[int index]
         {
-            return _dict.ContainsKey(key);
+            get
+            {
+                return this.ItemList[(int)index];
+            }
+            set
+            {
+                this.Insert(index, value);
+            }
+        }
+
+        // O(log n)
+        public void Add(T item)
+        {
+            var index = GetInsertIndex(item);
+
+            this.ItemList.Insert(index, item);
+
+            OnCollectionChanged_Add(item, index);
         }
 
         public void Clear()
         {
-            _dict.Clear();
-            _keys.Clear();
-            _values.Clear();
+            var list = this.ItemList.ToArray(); // Copy the list to pass on to listeners
+
+            this.ItemList.Clear();
+
+            OnCollectionChanged_Clear(list);
         }
 
-        public int IndexOf(T item)
-        {
-            return _values.IndexOf(item);
-        }
-
-        public void Insert(int index, T item)
-        {
-            throw new NotSupportedException();
-        }
-
-        public void RemoveAt(int index)
-        {
-            throw new NotSupportedException();
-        }
-
+        // O(log n)
         public bool Contains(T item)
         {
-            throw new NotSupportedException();
+            return GetInsertIndex(item) != UNSUCCESSFUL_SEARCH;
         }
 
         public void CopyTo(T[] array, int arrayIndex)
         {
-            throw new NotSupportedException();
+            this.ItemList.CopyTo(array, arrayIndex);
         }
 
         public IEnumerator<T> GetEnumerator()
         {
-            return _values.GetEnumerator();
+            return this.ItemList.GetEnumerator();
+        }
+
+        // O(log n)
+        public int IndexOf(T item)
+        {
+            return GetInsertIndex(item);
+        }
+
+        public void Insert(int index, T item)
+        {
+            throw new NotSupportedException("Manual insertion not allowed for SimpleOrderedList<>");
+        }
+
+        // O(log n)
+        public bool Remove(T item)
+        {
+            var index = GetInsertIndex(item);
+
+            if (index == UNSUCCESSFUL_SEARCH)
+                throw new Exception("Item not found in collection SimpleOrderedList.cs");
+
+            this.ItemList.RemoveAt(index);
+
+            OnCollectionChanged_Remove(item, index);
+
+            return true;
+        }
+
+        public void RemoveAt(int index)
+        {
+            var item = this.ItemList[index];
+
+            this.ItemList.RemoveAt(index);
+
+            OnCollectionChanged_Remove(item, index);
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return _values.GetEnumerator();
+            return this.ItemList.GetEnumerator();
         }
 
-        int BinarySearch(K searchKey, int lowerIndex, int upperIndex)
+        // O(log n)
+        public int Add(object value)
         {
-            // Choose the middle index to compare
-            var middleIndex = (int)Math.Floor((upperIndex + lowerIndex) / 2.0);
+            if (!(value is T))
+                throw new Exception("Trying to insert non-template type:  SimpleOrderedList");
 
-            // Perform key comparison
-            var comparison = searchKey.CompareTo(_keys[middleIndex]);
+            var index = GetInsertIndex((T)value);
 
-            if (comparison < 0)
+            this.ItemList.Insert(index, (T)value);
+
+            OnCollectionChanged_Add((T)value, index);
+
+            return index;
+        }
+
+        // O(log n)
+        public bool Contains(object value)
+        {
+            if (!(value is T))
+                throw new Exception("Trying to operate on non-template type:  SimpleOrderedList");
+
+            return GetInsertIndex((T)value) != UNSUCCESSFUL_SEARCH;
+        }
+
+        // O(log n)
+        public int IndexOf(object value)
+        {
+            if (!(value is T))
+                throw new Exception("Trying to operate on non-template type:  SimpleOrderedList");
+
+            return GetInsertIndex((T)value);
+        }
+
+        public void Insert(int index, object value)
+        {
+            throw new NotSupportedException("Manual insertion not allowed for SimpleOrderedList<>");
+        }
+
+        // O(log n)
+        public void Remove(object value)
+        {
+            if (!(value is T))
+                throw new Exception("Trying to operate on non-template type:  SimpleOrderedList");
+
+            var index = GetInsertIndex((T)value);
+
+            if (index == UNSUCCESSFUL_SEARCH)
+                throw new Exception("Item not found in collection SimpleOrderedList.cs");
+
+            this.ItemList.RemoveAt(index);
+
+            OnCollectionChanged_Remove((T)value, index);
+        }
+
+        public void CopyTo(Array array, int index)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        #region (private) Binary Search Implementation
+
+        private int BinarySearch(T searchItem, out int insertIndex)
+        {
+            /*
+                function binary_search(A, n, T) is
+                    L := 0
+                    R := n − 1
+                    while L ≤ R do
+                        m := floor((L + R) / 2)
+                        if A[m] < T then
+                            L := m + 1
+                        else if A[m] > T then
+                            R := m − 1
+                        else:
+                            return m
+                    return unsuccessful
+             */
+
+            var leftIndex = 0;
+            var rightIndex = this.ItemList.Count - 1;
+
+            // Initialize insert index to be the left index
+            insertIndex = leftIndex;
+
+            while (leftIndex <= rightIndex)
             {
-                // Single item left
-                if (lowerIndex == upperIndex)
-                    return middleIndex;
+                var middleIndex = (int)Math.Floor((leftIndex + rightIndex) / 2.0D);
+                var item = this.ItemList[middleIndex];
 
-                // Truncated to lower index
-                else if (middleIndex == lowerIndex)
-                    return middleIndex;
+                // Set insert index
+                insertIndex = middleIndex;
 
-                return BinarySearch(searchKey, lowerIndex, middleIndex - 1);
+                // Item's value is LESS THAN search value
+                if (this.ItemComparer.Compare(item, searchItem) < 0)
+                {
+                    leftIndex = middleIndex + 1;
+
+                    // Set insert index for catching final iteration
+                    insertIndex = leftIndex;
+                }
+
+                // GREATER THAN
+                else if (this.ItemComparer.Compare(item, searchItem) > 0)
+                    rightIndex = middleIndex - 1;
+
+                else
+                    return middleIndex;
             }
 
-            else if (comparison == 0)
-                throw new Exception("Duplicate key found SortedObservableCollection");
+            return UNSUCCESSFUL_SEARCH;
+        }
 
+        private int GetInsertIndex(T item)
+        {
+            var insertIndex = UNSUCCESSFUL_SEARCH;
+            var searchIndex = BinarySearch(item, out insertIndex);
+
+            // NOT FOUND
+            if (searchIndex == UNSUCCESSFUL_SEARCH)
+            {
+                return insertIndex;
+            }
             else
             {
-                // Single item left
-                if (lowerIndex == upperIndex)
-                    return middleIndex + 1;
-
-                return BinarySearch(searchKey, middleIndex + 1, upperIndex);
+                return searchIndex;
             }
         }
-
-        void OnPropertyChanged(string property)
-        {
-            if (this.PropertyChanged != null)
-                this.PropertyChanged(this, new PropertyChangedEventArgs(property));
-        }
-
-        void OnInsert(object item, int index)
-        {
-            // Hopefully a performance boost - depending on the UI implementation
-            if (this.CollectionChanged != null)
-                this.CollectionChanged(
-                        _values,
-                        new NotifyCollectionChangedEventArgs(
-                            NotifyCollectionChangedAction.Add, item, index));
-        }
-
-        void OnRemove(object item, int index)
-        {
-            // Hopefully a performance boost - depending on the UI implementation
-            if (this.CollectionChanged != null)
-                this.CollectionChanged(
-                        _values,
-                        new NotifyCollectionChangedEventArgs(
-                            NotifyCollectionChangedAction.Remove, item, index));
-        }
-
-        void OnReset()
-        {
-            if (this.CollectionChanged != null)
-                this.CollectionChanged(_values,
-                    new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
+        #endregion
     }
 }
