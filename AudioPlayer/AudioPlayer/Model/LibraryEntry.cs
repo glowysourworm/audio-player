@@ -99,11 +99,6 @@ namespace AudioPlayer.Model
             get { return _albumArtists; }
             set { SetProperty(ref _albumArtists, value); }
         }
-        public SortedObservableCollection<SerializableBitmap> AlbumArt
-        {
-            get { return _albumArt; }
-            set { this.SetProperty(ref _albumArt, value); }
-        }
         public SortedObservableCollection<string> Genres
         {
             get { return _genres; }
@@ -163,7 +158,6 @@ namespace AudioPlayer.Model
 
         public LibraryEntry(string file)
         {
-            this.AlbumArt = new SortedObservableCollection<SerializableBitmap>();
             this.AlbumArtists = new SortedObservableCollection<Artist>();
             this.FileName = file;
             this.MusicBrainzRecord = MusicBrainzRecord.Empty;

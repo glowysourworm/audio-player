@@ -66,13 +66,10 @@ namespace AudioPlayer.Model
                         var albumEntry = new AlbumViewModel()
                         {
                             Album = entry.Album,
+                            FileNameRef = entry.FileName,
                             Year = entry.Year,
                             Duration = entry.Duration
                         };
-
-                        // IImage (Avalonia) appears to use the old System.Drawing Bitmap interface
-                        //
-                        albumEntry.CoverImageSource = entry.AlbumArt.FirstOrDefault();
 
                         // Album -> Track(s)
                         albumEntry.Tracks.Add(new TitleViewModel()
@@ -108,17 +105,14 @@ namespace AudioPlayer.Model
                     var albumEntry = new AlbumViewModel()
                     {
                         Album = entry.Album,
+                        FileNameRef = entry.FileName,
                         Year = entry.Year
                     };
                     artistEntry = new ArtistViewModel()
                     {
-                        Artist = entry.AlbumArtists.First().Name                       
+                        Artist = entry.AlbumArtists.First().Name,
+                        FileNameRef= entry.FileName
                     };
-
-                    // IImage (Avalonia) appears to use the old System.Drawing Bitmap interface
-                    //
-                    albumEntry.CoverImageSource = entry.AlbumArt.FirstOrDefault();
-                    artistEntry.LatestAlbumCoverSource = entry.AlbumArt.FirstOrDefault();
 
                     albumEntry.Tracks.Add(new TitleViewModel()
                     {

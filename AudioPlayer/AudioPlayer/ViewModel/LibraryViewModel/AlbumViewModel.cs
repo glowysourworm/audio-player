@@ -15,11 +15,21 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
     /// </summary>
     public class AlbumViewModel : ModelBase
     {
+        string _fileNameRef;
         string _album;
         uint _year;
         TimeSpan _duration;
-        IImage _coverImageSource;
         SortedObservableCollection<TitleViewModel> _tracks;
+
+        /// <summary>
+        /// Reference to the Mp3 file. The album art is too large to pre-load. So, loading will have
+        /// to be accomplished on the fly.
+        /// </summary>
+        public string FileNameRef
+        {
+            get { return _fileNameRef; }
+            set { this.SetProperty(ref _fileNameRef, value); }
+        }
 
         public string Album
         {
@@ -30,11 +40,6 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
         {
             get { return _year; }
             set { this.SetProperty(ref _year, value); }
-        }
-        public IImage CoverImageSource
-        {
-            get { return _coverImageSource; }
-            set { this.SetProperty(ref _coverImageSource, value); }
         }
         public TimeSpan Duration
         {
@@ -50,7 +55,7 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
         public AlbumViewModel()
         {
             this.Album = string.Empty;
-            this.CoverImageSource = null;
+            this.FileNameRef = string.Empty;
             this.Duration = new TimeSpan();
             this.Year = 0;
             this.Tracks = new SortedObservableCollection<TitleViewModel>(new TrackNumberComparer());

@@ -15,7 +15,7 @@
 	<Application.Resources>
 		<converter:StringArrayConverter x:Key="StringArrayConverter" />
 		<converter:MusicBrainzValidColorConverter x:Key="MusicBrainzValidColorConverter" />
-		<converter:ArtworkCollectionConverter x:Key="ArtworkCollectionConverter" />
+		<converter:ArtworkFileConverter x:Key="ArtworkFileConverter" />
 		<converter:MusicBrainzConverter x:Key="MusicBrainzConverter" />
 		<converter:MetaEntryConverter x:Key="MetaEntryConverter" />
 		<SolidColorBrush x:Key="DefaultHeaderBrush" Color="#FF0000" />

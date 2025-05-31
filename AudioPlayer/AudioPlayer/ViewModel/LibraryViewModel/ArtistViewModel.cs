@@ -12,9 +12,20 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
     /// </summary>
     public class ArtistViewModel : ModelBase
     {
+        string _fileNameRef;
+
         string _artist;
         ObservableCollection<AlbumViewModel> _albums;
-        IImage _latestAlbumCoverSource;
+
+        /// <summary>
+        /// Reference to the Mp3 file. The album art is too large to pre-load. So, loading will have
+        /// to be accomplished on the fly.
+        /// </summary>
+        public string FileNameRef
+        {
+            get { return _fileNameRef; }
+            set { this.SetProperty(ref _fileNameRef, value); }
+        }
 
         public string Artist
         {
@@ -26,17 +37,12 @@ namespace AudioPlayer.ViewModel.LibraryViewModel
             get { return _albums; }
             set { this.SetProperty(ref _albums, value); }
         }
-        public IImage LatestAlbumCoverSource
-        {
-            get { return _latestAlbumCoverSource; }
-            set { this.SetProperty(ref _latestAlbumCoverSource, value); }
-        }
 
         public ArtistViewModel()
         {
             this.Artist = string.Empty;
             this.Albums = new ObservableCollection<AlbumViewModel>();
-            this.LatestAlbumCoverSource = null;
+            this.FileNameRef = string.Empty;
         }
     }
 }

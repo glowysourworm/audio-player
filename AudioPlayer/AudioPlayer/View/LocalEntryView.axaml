@@ -46,7 +46,7 @@
 				Margin="0, 10, 0, 0"
 				Width="180"
 				Height="180" >
-			<Image Source="{Binding Converter={StaticResource ArtworkCollectionConverter} ConverterParameter={Binding Library.Database}}" />
+			<Image Source="{Binding FileName, Converter={StaticResource ArtworkFileConverter}}" />
 		</Border>
 
 	</StackPanel>
