@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:iconPacks="https://github.com/MahApps/IconPacks.Avalonia"
+			 xmlns:local="clr-namespace:AudioPlayer;assembly=AudioPlayer"
+			 xmlns:template="clr-namespace:AudioPlayer.ControlTemplate;assembly=AudioPlayer"			 
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:CompileBindings="False"
+             x:Class="AudioPlayer.MainView">
+	<Grid>
+
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="*" />
+			<RowDefinition Height="250" />
+		</Grid.RowDefinitions>
+
+		<!-- Toolbar -->
+		<Menu HorizontalAlignment="Left">
+			<MenuItem>
+				<MenuItem.HeaderTemplate>
+					<DataTemplate>
+						<iconPacks:PackIconFontAwesome Kind="AlignJustifySolid" />
+					</DataTemplate>
+				</MenuItem.HeaderTemplate>
+			</MenuItem>
+		</Menu>
+
+		<!-- Primary Tab Views -->
+		<TabControl TabStripPlacement="Left" Grid.Row="1">
+
+			<TabControl.ContentTemplate>
+				<template:TabContentTemplate ContentBackground="#EEEEEE" />
+			</TabControl.ContentTemplate>
+
+			<TabItem FontSize="14" Margin="0" Header="Configuration">
+				<TabItem.HeaderTemplate>
+					<template:TabItemHeaderTemplate Header="Configuration" />
+				</TabItem.HeaderTemplate>
+				<local:ConfigurationView x:Name="ConfigurationView" />
+			</TabItem>
+
+			<TabItem FontSize="14" Margin="0" Header="Library Manager">
+				<TabItem.HeaderTemplate>
+					<template:TabItemHeaderTemplate Header="Library Manager" />
+				</TabItem.HeaderTemplate>
+				<local:ManagerView x:Name="ManagerView" />
+			</TabItem>
+
+			<TabItem FontSize="14" Margin="0" Header="Now Playing">
+				<TabItem.HeaderTemplate>
+					<template:TabItemHeaderTemplate Header="Now Playing" />
+				</TabItem.HeaderTemplate>
+				<local:NowPlayingView x:Name="NowPlayingView" />
+			</TabItem>
+
+
+		</TabControl>
+
+		<GridSplitter Grid.Row="1" VerticalAlignment="Bottom" BorderThickness="1" Height="3" Background="LightGray" />
+
+		<!-- Status Panel -->
+		<Border Grid.Row="2">
+			<TabControl Background="White">
+
+				<TabControl.ContentTemplate>
+					<template:TabContentTemplate ContentBackground="#EEEEEE" />
+				</TabControl.ContentTemplate>
+
+				<TabItem Header="Output" FontSize="14" Margin="0">
+					<TabItem.HeaderTemplate>
+						<template:TabItemHeaderTemplate Header="Output" />
+					</TabItem.HeaderTemplate>
+					<ListBox x:Name="OutputLB">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<TextBlock Text="{Binding Message}" Foreground="Black" />
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+				</TabItem>
+
+			</TabControl>
+		</Border>
+
+	</Grid>
+</UserControl>

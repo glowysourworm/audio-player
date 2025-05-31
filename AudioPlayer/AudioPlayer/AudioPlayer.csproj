@@ -1,8 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
     <Configurations>Debug;Release;Debug - NO LOAD</Configurations>
+    <StartupObject>AudioPlayer.Program</StartupObject>
+    <UseWindowsForms>False</UseWindowsForms>
+    <UseWPF>False</UseWPF>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug - NO LOAD|AnyCPU'">
     <DefineConstants>DEBUG;DEBUG_NO_LOAD</DefineConstants>
@@ -17,38 +20,30 @@
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
   <ItemGroup>
-    <AvaloniaResource Remove="View\ManagerView.xaml" />
-    <AvaloniaResource Remove="View\NowPlayingView.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="View\ManagerView.xaml" />
-    <None Remove="View\NowPlayingView.xaml" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="AcoustID.NET" Version="1.3.3" />
-    <PackageReference Include="Avalonia" Version="0.9.7" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.9.7" />
-    <PackageReference Include="Avalonia.ReactiveUI" Version="0.9.7" />
-    <PackageReference Include="Inflatable.Lastfm" Version="1.1.0.339" />
+    <PackageReference Include="Avalonia" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="FontAwesome5" Version="2.1.11" />
+    <PackageReference Include="IconPacks.Avalonia" Version="1.0.0" />
+    <PackageReference Include="IconPacks.Avalonia.FontAwesome" Version="1.0.0" />
+    <PackageReference Include="Inflatable.Lastfm" Version="1.2.0" />
+    <PackageReference Include="JetBrains.Annotations" Version="2024.3.0" />
     <PackageReference Include="MusicBrainz.Core" Version="1.0.1" />
+    <PackageReference Include="System.Security.Permissions" Version="9.0.5" />
     <PackageReference Include="taglib" Version="2.1.0" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="View\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <EmbeddedResource Include="View\NowPlayingView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Include="View\ManagerView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
+    <Compile Update="Controls\PropertyStringControl.axaml.cs">
+      <DependentUpon>PropertyStringControl.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="View\MusicBrainzLookupView.axaml.cs">
+      <DependentUpon>MusicBrainzLookupView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Update="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </None>
-    <None Update="View\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
     </None>
   </ItemGroup>

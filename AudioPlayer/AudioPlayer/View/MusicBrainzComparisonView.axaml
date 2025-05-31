@@ -1,0 +1,38 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="clr-namespace:AudioPlayer.Controls;assembly=AudioPlayer"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AudioPlayer.MusicBrainzComparisonView">
+
+	<!-- Music Brainz Fields -->
+	<StackPanel>
+
+		<!-- Title -->
+		<controls:PropertyStringControl LabelText="Title" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Title}" IsReadOnly="True" />
+
+		<!-- Artist(s) -->
+		<controls:PropertyStringControl LabelText="Artist(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding AlbumArtists, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Album -->
+		<controls:PropertyStringControl LabelText="Album" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Album}" IsReadOnly="True" />
+
+		<!-- Year -->
+		<controls:PropertyStringControl LabelText="Year" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Year}" IsReadOnly="True" />
+		
+		<!-- Genre(s) -->
+		<controls:PropertyStringControl LabelText="Genre(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Genres, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl LabelText="Disc #" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Disc}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl LabelText="Disc Count" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding DiscCount}" IsReadOnly="True" />
+
+		<!-- Track -->
+		<controls:PropertyStringControl LabelText="Track" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Track}" IsReadOnly="True" />
+		
+	</StackPanel>
+	
+</UserControl>

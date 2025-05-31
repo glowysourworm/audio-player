@@ -1,9 +1,11 @@
-﻿using AudioPlayer.Extension;
-using AudioPlayer.Model.Interface;
-using AudioPlayer.Model.Vendor;
-
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+
+using AudioPlayer.Event;
+using AudioPlayer.Extension;
+using AudioPlayer.Model;
+using AudioPlayer.Model.Vendor;
 
 namespace AudioPlayer.Component
 {
@@ -12,9 +14,11 @@ namespace AudioPlayer.Component
         /// <summary>
         /// Tries to look up information for the provided library entry
         /// </summary>
-        public static IEnumerable<MusicBrainzRecord> Query(ILibraryEntry entry)
+        public static Task<IEnumerable<MusicBrainzRecord>> Query(LibraryEntry entry)
         {
-            return MusicBrainz.Search
+            return Task.Run<IEnumerable<MusicBrainzRecord>>(() =>
+            {
+                return MusicBrainz.Search
                               .Recording(entry.Title, artist: entry.AlbumArtists.FirstOrDefault(), release: entry.Album)
                               .Data
                               .Select(result => new
@@ -22,7 +26,8 @@ namespace AudioPlayer.Component
                                   Id = result.Id,
                                   Title = result.Title,
                                   Releases = result.Releaselist,
-                                  Artists = result.Artistcredit
+                                  Artists = result.Artistcredit,
+                                  Score = result.Score
                               })
                               .SelectMany(x => x.Releases.Select(release =>
                               {
@@ -38,6 +43,11 @@ namespace AudioPlayer.Component
                                       Track = release.Mediumlist.Medium.Position,
                                       Country = release.Country,
                                       Status = release.Status,
+                                      MediumList = release.Mediumlist,
+                                      Credits = release.Artistcredit,
+                                      ReleaseEvents = release.Releaseeventlist,
+                                      ReleaseGroup = release.Releasegroup,
+                                      Score = x.Score,
                                       Year = year,
                                       Artists = x.Artists.Select(artist => artist.Artist.Sortname)
                                   };
@@ -50,10 +60,12 @@ namespace AudioPlayer.Component
                                   MusicBrainzReleaseStatus = x.Status,
                                   Title = x.Title,
                                   Track = (uint)x.Track,
+                                  Score = x.Score,
                                   Year = x.Year
                               })
                               .OrderBy(x => x.Title)
                               .Actualize();
+            });            
         }
     }
 }

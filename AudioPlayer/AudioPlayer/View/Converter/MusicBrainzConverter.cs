@@ -1,10 +1,10 @@
-﻿using AudioPlayer.Component;
-using AudioPlayer.Model.Interface;
-using Avalonia.Data.Converters;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
-using System.Text;
+
+using AudioPlayer.Component;
+using AudioPlayer.Model;
+
+using Avalonia.Data.Converters;
 
 namespace AudioPlayer.View.Converter
 {
@@ -12,19 +12,19 @@ namespace AudioPlayer.View.Converter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var entry = value as ILibraryEntry;
+            //var entry = value as LibraryEntry;
 
-            if (entry != null)
-            {
-                try
-                {
-                    return MusicBrainzClient.Query(entry);
-                }
-                catch (Exception)
-                {
-                    return value;
-                }
-            }
+            //if (entry != null)
+            //{
+            //    try
+            //    {
+            //        return MusicBrainzClient.Query(entry);
+            //    }
+            //    catch (Exception)
+            //    {
+            //        return value;
+            //    }
+            //}
 
             return value;
         }

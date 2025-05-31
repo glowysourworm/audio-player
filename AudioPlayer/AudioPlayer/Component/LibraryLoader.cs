@@ -1,66 +1,76 @@
-﻿using AudioPlayer.Extension;
-using AudioPlayer.Model;
-using AudioPlayer.Model.Database;
-using AudioPlayer.Model.Interface;
-using Avalonia.Threading;
-
-using System;
+﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
+using AudioPlayer.Extensions.NativeIO.FastDirectory;
+using AudioPlayer.Model;
+using AudioPlayer.Model.EventHandler;
+using AudioPlayer.ViewModel;
+
 namespace AudioPlayer.Component
 {
     public static class LibraryLoader
     {
-        public static LibraryFile Load(string[] directories)
+        /// <summary>
+        /// Loads .mp3 file entries from file and creates a library from the entries
+        /// </summary>
+        public static Task<IEnumerable<LibraryEntry>> Load(LibraryConfiguration configuration, SimpleHandler<string, LogMessageSeverity> messageHandler)
         {
-            var libraryFile = new LibraryFile();
-
-            // Scan directories for files
-            var files = directories.SelectMany(directory =>
+            return Task<IEnumerable<LibraryEntry>>.Run<IEnumerable<LibraryEntry>>(() =>
             {
-                return Directory.GetFiles(directory, "*.mp3", SearchOption.AllDirectories);
+                // Scan directories for files (Use NativeIO for much faster iteration. Less managed memory loading)
+                var files = FastDirectoryEnumerator.GetFiles(configuration.DirectoryBase, "*.mp3", SearchOption.AllDirectories);
 
-            }).ToList();
+                var entries = new ConcurrentBag<LibraryEntry>();
 
-            var entries = new ConcurrentBag<ILibraryEntry>();
+                // Use TPL to create library entries
+                Parallel.ForEach(files, new ParallelOptions() { MaxDegreeOfParallelism = 4 }, (file) =>
+                {
+                    LibraryEntry entry = null;
 
-            // Use TPL to create library entries
-            Parallel.ForEach(files, /* new ParallelOptions() { MaxDegreeOfParallelism = 4 }, */ (file) =>
-            {
-                // Generate entry
-                var entry = LibraryEntryLoader.Load(file);
+                    // Generate entry
+                    try
+                    {
+                        entry = LibraryEntryLoader.Load(file.Path);
 
-                // Keep track of completed entries 
-                if (entry != null)
-                    entries.Add(entry);
+                        messageHandler(string.Format("Music file loaded:  {0}", file.Path), LogMessageSeverity.Info);
+                    }
+                    catch (Exception ex)
+                    {
+                        entry = new LibraryEntry(file.Path)
+                        {
+                            FileLoadError = true,
+                            FileLoadErrorMessage = ex.Message,        // Should be handled based on exception (user friendly message)
+                        };
+
+                        messageHandler(string.Format("Music file load error:  {0}", file.Path), LogMessageSeverity.Error);
+                    }
+
+                    // Keep track of completed entries 
+                    if (entry != null)
+                        entries.Add(entry);
+
+                    else
+                        throw new Exception("Unhandled library loader exception:  LibraryLoader.cs");
+                });
+
+                // Report
+                messageHandler(string.Format("{0} music files read successfully! {1} of {2} loaded. {3} had loading issues.", 
+                               entries.Count, 
+                               entries.Where(x => !x.FileLoadError).Count(),
+                               entries.Count,
+                               entries.Where(x => x.FileLoadError).Count()),
+                               entries.Where(x => x.FileLoadError).Count() == 0 ? LogMessageSeverity.Info : LogMessageSeverity.Error);
+
+                messageHandler("See Library Manager to resolve loading issues", LogMessageSeverity.Info);
+
+                return entries;
+
             });
-
-            foreach (var entry in entries)
-            {
-                // Add entry to the library
-                //
-                // TODO: HANDLE INVALID ENTRIES
-                // if (entry.IsValid)
-                libraryFile.AddEntry(entry);
-            }
-
-            return libraryFile;
-        }
-
-        public static LibraryFile Load(string libraryFileName)
-        {
-            try
-            {
-                // Load library database
-                return Serializer.Deserialize<LibraryFile>(libraryFileName);
-            }
-            catch (Exception)
-            {
-                return new LibraryFile();
-            }
         }
     }
 }

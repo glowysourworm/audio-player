@@ -1,21 +1,21 @@
-﻿using AudioPlayer.Constant;
-using AudioPlayer.Model;
-using AudioPlayer.Model.Database;
-using AudioPlayer.Model.Interface;
-using IF.Lastfm.Core.Api;
-using IF.Lastfm.Core.Api.Enums;
-
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
+using AudioPlayer.Constant;
+using AudioPlayer.Model;
+using AudioPlayer.Model.Database;
+
+using IF.Lastfm.Core.Api;
+using IF.Lastfm.Core.Api.Enums;
+
 namespace AudioPlayer.Component
 {
     public static class LastFmClient
     {
-        public static async Task<SerializableBitmap> DownloadArtwork(ILibraryEntry entry)
+        public static async Task<SerializableBitmap> DownloadArtwork(LibraryEntry entry)
         {
             if (entry.IsUnknown(x => x.Album) ||
                 entry.IsUnknown(x => x.AlbumArtists))

@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AudioPlayer.Controls.PropertyStringControl">
+
+	<Grid>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="{Binding LabelColumnWidth, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+		
+		<TextBlock Text="{Binding LabelText, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+				   Foreground="{Binding LabelForeground, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+				   Margin="5 0" VerticalAlignment="Center" />
+		
+		<TextBox Grid.Column="1" 
+				 Text="{Binding Value, RelativeSource={RelativeSource AncestorType=UserControl}}" 
+				 IsReadOnly="{Binding IsReadOnly, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+	</Grid>
+</UserControl>

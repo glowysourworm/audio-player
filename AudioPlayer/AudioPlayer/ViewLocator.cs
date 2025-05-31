@@ -9,7 +9,12 @@ namespace AudioPlayer
     {
         public bool SupportsRecycling => false;
 
-        public IControl Build(object data)
+        public bool Match(object data)
+        {
+            return data is ModelBase;
+        }
+
+        Control ITemplate<object, Control>.Build(object data)
         {
             var name = data.GetType().FullName.Replace("ViewModel", "View");
             var type = Type.GetType(name);
@@ -22,11 +27,6 @@ namespace AudioPlayer
             {
                 return new TextBlock { Text = "Not Found: " + name };
             }
-        }
-
-        public bool Match(object data)
-        {
-            return data is ModelBase;
         }
     }
 }

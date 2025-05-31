@@ -1,8 +1,8 @@
-﻿using AudioPlayer.Model.Database;
-using Avalonia;
-using System;
+﻿using System;
 using System.IO;
 using System.IO.Compression;
+
+using AudioPlayer.Model;
 
 namespace AudioPlayer.Component
 {
@@ -11,20 +11,18 @@ namespace AudioPlayer.Component
     /// </summary>
     public static class LibraryArchiver
     {
-        const string LIBRARY_FILE = "AudioLibrary";
-
         /// <summary>
         /// Saves library file to specified path with specified name (no extension)
         /// </summary>
-        public static void Save(LibraryFile libraryFile)
+        public static void Save(Library library, string fileName)
         {
-            using (var stream = File.Create(LIBRARY_FILE))
+            using (var stream = File.Create(fileName))
             {
                 using (var zipStream = new GZipStream(stream, CompressionMode.Compress))
                 {
                     try
                     {
-                        Serializer.Serialize(libraryFile, zipStream);
+                        Serializer.Serialize(library, zipStream);
                     }
                     catch (Exception ex)
                     {
@@ -37,9 +35,9 @@ namespace AudioPlayer.Component
         /// <summary>
         /// Opens library file from specified path
         /// </summary>
-        public static LibraryFile Open()
+        public static Library Open(string fileName)
         {
-            var compressedBuffer = File.ReadAllBytes(LIBRARY_FILE);
+            var compressedBuffer = File.ReadAllBytes(fileName);
 
             using (var inputStream = new MemoryStream(compressedBuffer))
             {
@@ -55,7 +53,7 @@ namespace AudioPlayer.Component
 
                         try
                         {
-                            return Serializer.Deserialize<LibraryFile>(buffer);
+                            return Serializer.Deserialize<Library>(buffer);
                         }
                         catch (Exception ex)
                         {

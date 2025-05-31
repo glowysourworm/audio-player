@@ -1,0 +1,54 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="clr-namespace:AudioPlayer.Controls;assembly=AudioPlayer"
+			 x:CompileBindings="False"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AudioPlayer.LocalEntryView">
+	
+	<StackPanel>
+		
+		<TextBlock Text="Library Entry" FontSize="16" Padding="7 5" HorizontalAlignment="Stretch" TextAlignment="Left" Background="AliceBlue" />			
+
+		<!-- Title -->
+		<controls:PropertyStringControl Margin="3" LabelText="Title" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Title}" IsReadOnly="True" />
+
+		<!-- Artist(s) -->
+		<controls:PropertyStringControl Margin="3" LabelText="Artist(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding AlbumArtists, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Album -->
+		<controls:PropertyStringControl Margin="3" LabelText="Album" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Album}" IsReadOnly="True" />
+
+		<!-- Year -->
+		<controls:PropertyStringControl Margin="3" LabelText="Year" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Year}" IsReadOnly="True" />
+
+		<!-- Genre(s) -->
+		<controls:PropertyStringControl Margin="3" LabelText="Genre(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Genres, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl Margin="3" LabelText="Disc #" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Disc}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl Margin="3" LabelText="Disc Count" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding DiscCount}" IsReadOnly="True" />
+
+		<!-- Track -->
+		<controls:PropertyStringControl Margin="3" LabelText="Track" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding Track}" IsReadOnly="True" />
+
+		<!-- Album Artwork -->
+		<Border Background="Transparent"
+				Grid.Row="1"
+				Grid.Column="0"
+				BorderBrush="LightGray"
+				BorderThickness="0.5"
+				HorizontalAlignment="Center"
+				VerticalAlignment="Top"
+				Margin="0, 10, 0, 0"
+				Width="180"
+				Height="180" >
+			<Image Source="{Binding Converter={StaticResource ArtworkCollectionConverter} ConverterParameter={Binding Library.Database}}" />
+		</Border>
+
+	</StackPanel>
+	
+</UserControl>

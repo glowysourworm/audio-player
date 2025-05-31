@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:controls="clr-namespace:AudioPlayer.Controls;assembly=AudioPlayer"
+			 xmlns:iconPacks="https://github.com/MahApps/IconPacks.Avalonia"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="AudioPlayer.MusicBrainzLookupView">
+
+	<!-- Music Brainz Fields -->
+	<StackPanel>
+
+		<Border x:Name="HeaderBorder">
+
+			<Grid Grid.ColumnDefinitions="*, Auto">
+				<TextBlock Text="Music Brainz (Remote)"
+						   FontSize="16"
+						   Padding="7 5"
+						   HorizontalAlignment="Stretch"
+						   TextAlignment="Left" />
+
+				<Button Grid.Column="1" Command="{Binding QueryMusicBrainzCommand}" Cursor="Hand" Background="LightGray">
+					<iconPacks:PackIconFontAwesome Kind="AlignJustifySolid" />
+				</Button>
+			</Grid>
+		</Border>
+
+		<!-- Query Results -->
+		<Grid Grid.ColumnDefinitions="150, *">
+			<TextBlock Text="Music Brainz Result(s)" Margin="7,0,0,0" Foreground="Gray" VerticalAlignment="Center" />
+			<ComboBox x:Name="MusicBrainzResultsCB"
+					  Grid.Column="1"
+					  Margin="0, 5, 3, 5"
+					  ItemsSource="{Binding MusicBrainzResults}"
+					  SelectionChanged="OnMusicBrainzResultsChanged"
+					  HorizontalAlignment="Stretch"
+					  VerticalContentAlignment="Center">
+				<ComboBox.ItemTemplate>
+					<DataTemplate>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding Album}" />
+							<TextBlock Text=" / " />
+							<TextBlock Text="{Binding Title}" />
+							<TextBlock Text=" / (Match score of " />
+							<TextBlock Text="{Binding Score}" />
+							<TextBlock Text=")" />
+						</StackPanel>
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+		</Grid>
+
+		<!-- Id -->
+		<controls:PropertyStringControl Margin="3" LabelText="Music Brainz Id" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Id}" IsReadOnly="True" />
+
+		<!-- Score -->
+		<controls:PropertyStringControl Margin="3" LabelText="Music Brainz Id" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Score}" IsReadOnly="True" />
+
+		<!-- Title -->
+		<controls:PropertyStringControl Margin="3" LabelText="Title" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Title}" IsReadOnly="True" />
+
+		<!-- Artist(s) -->
+		<controls:PropertyStringControl Margin="3" LabelText="Artist(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.AlbumArtists, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Album -->
+		<controls:PropertyStringControl Margin="3" LabelText="Album" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Album}" IsReadOnly="True" />
+
+		<!-- Year -->
+		<controls:PropertyStringControl Margin="3" LabelText="Year" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Year}" IsReadOnly="True" />
+
+		<!-- Genre(s) -->
+		<controls:PropertyStringControl Margin="3" LabelText="Genre(s)" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Genres, Converter={StaticResource StringArrayConverter}}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl Margin="3" LabelText="Disc #" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Disc}" IsReadOnly="True" />
+
+		<!-- Disc -->
+		<controls:PropertyStringControl Margin="3" LabelText="Disc Count" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.DiscCount}" IsReadOnly="True" />
+
+		<!-- Track -->
+		<controls:PropertyStringControl Margin="3" LabelText="Track" LabelColumnWidth="200" LabelForeground="Gray" Value="{Binding MusicBrainzRecord.Track}" IsReadOnly="True" />
+
+	</StackPanel>
+
+</UserControl>

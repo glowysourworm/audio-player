@@ -1,0 +1,59 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:local="clr-namespace:AudioPlayer;assembly=AudioPlayer"
+			 xmlns:iconPacks="https://github.com/MahApps/IconPacks.Avalonia"
+			 xmlns:template="clr-namespace:AudioPlayer.ControlTemplate;assembly=AudioPlayer"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 x:CompileBindings="False"
+             x:Class="AudioPlayer.ManagerView">
+	
+	<Grid>
+
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="300" />
+			<ColumnDefinition Width="300" />
+		</Grid.ColumnDefinitions>
+
+		<!-- Library Entries -->
+		<ListBox x:Name="LibraryLB" ItemsSource="{Binding Library.AllTitles}" SelectionChanged="ListBox_SelectionChanged">
+			<ListBox.Styles>
+				<Style Selector="ListBoxItem Border Border">
+					<Setter Property="Background" Value="{Binding MusicBrainzRecordValid, Converter={StaticResource MusicBrainzValidColorConverter}}" />
+				</Style>
+			</ListBox.Styles>
+			<ListBox.ItemsPanel>
+				<ItemsPanelTemplate>
+					<VirtualizingStackPanel />
+				</ItemsPanelTemplate>
+			</ListBox.ItemsPanel>
+			<ListBox.ItemTemplate>
+				<DataTemplate>
+					<Border>
+						<Grid Grid.ColumnDefinitions="*, Auto">
+							<TextBlock Text="{Binding FileName}" FontSize="14" VerticalAlignment="Center" />
+							<Border Grid.Column="1" CornerRadius="3">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="(Music Brainz)" VerticalAlignment="Center" Margin="3" Foreground="Gray" />
+									
+									<Button Command="{Binding QueryMusicBrainzCommand}" Cursor="Hand" Background="LightGray" HorizontalAlignment="Right" Margin="3">
+										<iconPacks:PackIconFontAwesome Kind="AlignJustifySolid" Height="12" Width="12" />
+									</Button>
+								</StackPanel>
+							</Border>
+						</Grid>
+					</Border>
+				</DataTemplate>
+			</ListBox.ItemTemplate>
+		</ListBox>
+		
+		<!-- Local (Details) -->
+		<local:LocalEntryView x:Name="LocalEntryItemView" Grid.Column="1" />
+
+		<!-- Music Brainz (Details) -->
+		<local:MusicBrainzLookupView x:Name="MusicBrainzItemView" Grid.Column="2" />
+
+	</Grid>
+</UserControl>

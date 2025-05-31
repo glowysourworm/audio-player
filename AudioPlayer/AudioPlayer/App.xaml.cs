@@ -3,6 +3,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using AudioPlayer.View;
 using Avalonia.Controls;
+using AudioPlayer.ViewModel;
 
 namespace AudioPlayer
 {

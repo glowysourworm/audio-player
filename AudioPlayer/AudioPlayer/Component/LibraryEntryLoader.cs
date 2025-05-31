@@ -1,12 +1,10 @@
-﻿using AudioPlayer.Extension;
-using AudioPlayer.Model;
-using AudioPlayer.Model.Interface;
-
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+
+using AudioPlayer.Extension;
+using AudioPlayer.Model;
 
 namespace AudioPlayer.Component
 {
@@ -14,7 +12,7 @@ namespace AudioPlayer.Component
     {
         const string UNKNOWN = "Unknown";
 
-        public static ILibraryEntry Load(string file)
+        public static LibraryEntry Load(string file)
         {
             if (string.IsNullOrEmpty(file))
                 throw new ArgumentException("Invalid media file name");
@@ -37,13 +35,13 @@ namespace AudioPlayer.Component
                     Year = fileRef.Tag.Year
                 };
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                throw ex;
             }
         }
 
-        public static bool IsUnknown<T>(this ILibraryEntry entry, Expression<Func<ILibraryEntry, T>> propertyExpression)
+        public static bool IsUnknown<T>(this LibraryEntry entry, Expression<Func<LibraryEntry, T>> propertyExpression)
         {
             var expression = (MemberExpression)propertyExpression.Body;
             var propertyInfo = (PropertyInfo)expression.Member;

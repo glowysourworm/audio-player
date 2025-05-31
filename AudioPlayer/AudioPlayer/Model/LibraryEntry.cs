@@ -1,22 +1,22 @@
-﻿using AudioPlayer.Extension;
-using AudioPlayer.Model.Database;
-using AudioPlayer.Model.Interface;
-using ReactiveUI;
-
-using System;
-using System.Collections.Generic;
+﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.Serialization;
 
-using TagLib;
+using AudioPlayer.Component;
+using AudioPlayer.Event;
+using AudioPlayer.Extension;
+using AudioPlayer.Model.Command;
+using AudioPlayer.Model.Vendor;
+using AudioPlayer.ViewModel;
 
 namespace AudioPlayer.Model
 {
     [Serializable]
-    public class LibraryEntry : ModelBase, ILibraryEntry
+    public class LibraryEntry : ModelBase
     {
+        public event SimpleEventHandler<string, LogMessageSeverity> LogEvent;
+
         #region (private) Backing Fields
         SortedObservableCollection<string, string> _albumArtists;
         SortedObservableCollection<string, string> _genres;
@@ -28,56 +28,118 @@ namespace AudioPlayer.Model
         uint _track;
         uint _disc;
         uint _discCount;
+
+        // Music Brainz
+        ObservableCollection<MusicBrainzRecord> _musicBrainzResults;            // Not Serialized
+        MusicBrainzRecord _musicBrainzRecord;
+
+        // Problems
+        bool _fileMissing;
+        bool _fileLoadError;
+        bool _fileLocationNameMismatch;     // File folder path should be related to the album (see Tag loading)
+
+        string _fileLoadErrorMessage;
+
+        // Commands
+        ModelCommand _queryMusicBrainzCommand;
         #endregion
 
         #region (public) Tag Fields
         public string FileName
         {
             get { return _fileName; }
-            private set { Update(ref _fileName, value); }
+            private set { SetProperty(ref _fileName, value); }
         }
 
         public string Album
         {
             get { return _album; }
-            set { Update(ref _album, value); }
+            set { SetProperty(ref _album, value); }
         }
         public string Title
         {
             get { return _title; }
-            set { Update(ref _title, value); }
+            set { SetProperty(ref _title, value); }
         }
         public uint Year
         {
             get { return _year; }
-            set { Update(ref _year, value); }
+            set { SetProperty(ref _year, value); }
         }
         public uint Track
         {
             get { return _track; }
-            set { Update(ref _track, value); }
+            set { SetProperty(ref _track, value); }
         }
         public uint Disc
         {
             get { return _disc; }
-            set { Update(ref _disc, value); }
+            set { SetProperty(ref _disc, value); }
         }
         public uint DiscCount
         {
             get { return _discCount; }
-            set { Update(ref _discCount, value); }
+            set { SetProperty(ref _discCount, value); }
         }
 
         public SortedObservableCollection<string, string> AlbumArtists
         {
             get { return _albumArtists; }
-            set { Update(ref _albumArtists, value); }
+            set { SetProperty(ref _albumArtists, value); }
         }
         public SortedObservableCollection<string, string> Genres
         {
             get { return _genres; }
-            set { Update(ref _genres, value); }
+            set { SetProperty(ref _genres, value); }
         }
+
+        public bool FileMissing
+        {
+            get { return _fileMissing; }
+            set { this.SetProperty(ref _fileMissing, value); }
+        }
+        public bool FileLoadError
+        {
+            get { return _fileLoadError; }
+            set { this.SetProperty(ref _fileLoadError, value); }
+        }
+        public bool FileLocationNameMismatch
+        {
+            get { return _fileLocationNameMismatch; }
+            set { this.SetProperty(ref _fileLocationNameMismatch, value); }
+        }
+        public string FileLoadErrorMessage
+        {
+            get { return _fileLoadErrorMessage; }
+            set { this.SetProperty(ref _fileLoadErrorMessage, value); }
+        }
+        public ObservableCollection<MusicBrainzRecord> MusicBrainzResults
+        {
+            get { return _musicBrainzResults; }
+            set { this.SetProperty(ref _musicBrainzResults, value); }
+        }
+
+        public MusicBrainzRecord MusicBrainzRecord
+        {
+            get { return _musicBrainzRecord; }
+            set 
+            { 
+                this.SetProperty(ref _musicBrainzRecord, value);
+                this.OnPropertyChanged("MusicBrainzRecordValid");
+            }
+        }
+        public bool MusicBrainzRecordValid
+        {
+            get { return _musicBrainzRecord != MusicBrainzRecord.Empty; }
+        }
+
+
+        public ModelCommand QueryMusicBrainzCommand
+        {
+            get { return _queryMusicBrainzCommand; }
+            set { this.SetProperty(ref _queryMusicBrainzCommand, value); }
+        }
+
         #endregion
 
         public LibraryEntry() { }
@@ -85,6 +147,56 @@ namespace AudioPlayer.Model
         public LibraryEntry(string file)
         {
             this.FileName = file;
+            this.MusicBrainzRecord = MusicBrainzRecord.Empty;
+            this.MusicBrainzResults = new ObservableCollection<MusicBrainzRecord>();
+
+            this.MusicBrainzRecord.PropertyChanged += MusicBrainzRecord_PropertyChanged;
+
+            this.OnPropertyChanged("MusicBrainzRecordValid");   // Calculated property (initialize)
+
+            this.QueryMusicBrainzCommand = new ModelCommand(async () =>
+            {
+                try
+                {
+                    OnLog("Querying MusicBrainz (remote): Title:  {0}", LogMessageSeverity.Info, this.Title);
+
+                    // Music Brainz!
+                    //
+                    var records = await MusicBrainzClient.Query(this);
+
+                    // TODO: Need Best Record Matcher
+                    this.MusicBrainzRecord = records.FirstOrDefault() ?? MusicBrainzRecord.Empty;
+
+                    foreach (var record in records)
+                    {
+                        this.MusicBrainzResults.Add(record);
+                    }
+
+                    OnLog("MusicBrainz Query Finished: {0} Results (arranged by score)", LogMessageSeverity.Info, records.Count());
+                }
+                catch (Exception ex)
+                {
+                    OnLog("Music Brainz Error:  {0}", LogMessageSeverity.Error, ex.Message);
+                }
+            });
+        }
+
+        ~LibraryEntry()
+        {
+            this.MusicBrainzRecord.PropertyChanged -= MusicBrainzRecord_PropertyChanged;
+        }
+
+        private void MusicBrainzRecord_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            // Dependent Properties
+            this.OnPropertyChanged("MusicBrainzRecord");        // Bubble up property changes
+            this.OnPropertyChanged("MusicBrainzRecordValid");   // Calculated property
+        }
+
+        private void OnLog(string message, LogMessageSeverity severity, params object[] args)
+        {
+            if (this.LogEvent != null)
+                this.LogEvent(string.Format(message, args), severity);
         }
 
         public LibraryEntry(SerializationInfo info, StreamingContext context)
@@ -99,6 +211,13 @@ namespace AudioPlayer.Model
             this.DiscCount = info.GetUInt32("DiscCount");
             this.AlbumArtists = (SortedObservableCollection<string, string>)info.GetValue("AlbumArtists", typeof(SortedObservableCollection<string, string>));
             this.Genres = (SortedObservableCollection<string, string>)info.GetValue("Genres", typeof(SortedObservableCollection<string, string>));
+
+            this.FileMissing = info.GetBoolean("FileMissing");
+            this.FileLoadError = info.GetBoolean("FileLoadError");
+            this.FileLocationNameMismatch = info.GetBoolean("FileLocationNameMismatch");
+            this.FileLoadErrorMessage = info.GetString("FileLoadErrorMessage");
+
+            this.MusicBrainzRecord = (MusicBrainzRecord)info.GetValue("MusicBrainzRecord", typeof(MusicBrainzRecord));
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -113,6 +232,13 @@ namespace AudioPlayer.Model
             info.AddValue("DiscCount", this.DiscCount);
             info.AddValue("AlbumArtists", this.AlbumArtists);
             info.AddValue("Genres", this.Genres);
+
+            info.AddValue("FileMissing", this.FileMissing);
+            info.AddValue("FileLoadError", this.FileLoadError);
+            info.AddValue("FileLocationNameMismatch", this.FileLocationNameMismatch);
+            info.AddValue("FileLoadErrorMessage", this.FileLoadErrorMessage);
+
+            info.AddValue("MusicBrainzRecord", this.MusicBrainzRecord);
         }
     }
 }

@@ -1,9 +1,7 @@
-﻿using AudioPlayer.Model.Interface;
-using Avalonia.Data.Converters;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Globalization;
-using System.Text;
+
+using Avalonia.Data.Converters;
 
 namespace AudioPlayer.View.Converter
 {
@@ -11,12 +9,12 @@ namespace AudioPlayer.View.Converter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var entry = value as ILibraryMetaEntry;
+            //var entry = value as ILibraryMetaEntry;
 
-            if (entry != null)
-            {
-                return entry.Album + " - " + entry.Title;
-            }
+            //if (entry != null)
+            //{
+            //    return entry.Album + " - " + entry.Title;
+            //}
 
             return value;
         }
