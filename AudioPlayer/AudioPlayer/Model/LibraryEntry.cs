@@ -14,8 +14,7 @@ using AudioPlayer.ViewModel;
 
 namespace AudioPlayer.Model
 {
-    [Serializable]
-    public class LibraryEntry : ModelBase
+    public class LibraryEntry : ModelBase, ISerializable
     {
         public event SimpleEventHandler<string, LogMessageSeverity> LogEvent;
 

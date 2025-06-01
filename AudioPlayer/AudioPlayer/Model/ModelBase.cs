@@ -7,7 +7,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AudioPlayer.Model
 {
-    [Serializable]
     public abstract class ModelBase : ObservableObject
     {
 

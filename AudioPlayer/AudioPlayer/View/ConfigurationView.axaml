@@ -2,21 +2,29 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:iconPacks="https://github.com/MahApps/IconPacks.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 			 x:CompileBindings="False"
              x:Class="AudioPlayer.ConfigurationView">
 
 	<!-- Library Configuration -->
-	<Grid Grid.RowDefinitions="36,*" Grid.ColumnDefinitions="Auto, *, Auto">
+	<Grid Grid.RowDefinitions="36, 36, *" Grid.ColumnDefinitions="Auto, *, Auto">
 
 		<!-- Label Column -->
 		<TextBlock Text="Directory" VerticalAlignment="Center" Margin="10, 0, 10, 0" />
+		<TextBlock Text="Library Database File" VerticalAlignment="Center" Margin="10, 0, 10, 0" Grid.Row="1" />
 
 		<!-- Input Column -->
-		<TextBox Text="{Binding LibraryConfiguration.DirectoryBase}" Focusable="False" VerticalContentAlignment="Center" IsReadOnly="True" Grid.Column="1" Margin="0,5" />
+		<TextBox Text="{Binding LibraryConfiguration.DirectoryBase}" Focusable="False" VerticalContentAlignment="Center" IsReadOnly="True" Grid.Column="1" Margin="0,5" Foreground="Gray" />
+		<TextBox Text="{Binding LibraryDatabaseFile}" Focusable="False" VerticalContentAlignment="Center" IsReadOnly="True" Grid.Column="1" Grid.Row="1" Margin="0,5" Foreground="Gray"/>
 
 		<!-- Button Column -->
-		<Button Content="..." Grid.Column="2" Command="{Binding LibraryConfiguration.OpenLibraryFileCommand}" Cursor="Hand" Margin="10,5" />
+		<Button Grid.Column="2" Command="{Binding LibraryConfiguration.OpenLibraryFileCommand}" Cursor="Hand" Margin="10,5">
+			<iconPacks:PackIconFontAwesome Kind="FolderOpenRegular" Height="16" Width="16" />
+		</Button>
+		<!--Button Grid.Column="2" Grid.Row="1" Command="{Binding SelectLibraryDatabaseFileCommand}" Cursor="Hand" Margin="10,5">
+			<iconPacks:PackIconFontAwesome Kind="FolderOpenRegular" Height="16" Width="16" />
+		</Button-->
 		
 	</Grid>
 	

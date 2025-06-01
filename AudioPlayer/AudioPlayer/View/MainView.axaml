@@ -13,17 +13,42 @@
 		<Grid.RowDefinitions>
 			<RowDefinition Height="Auto" />
 			<RowDefinition Height="*" />
-			<RowDefinition Height="250" />
+			<RowDefinition Height="Auto" />
 		</Grid.RowDefinitions>
 
 		<!-- Toolbar -->
 		<Menu HorizontalAlignment="Left">
 			<MenuItem>
-				<MenuItem.HeaderTemplate>
-					<DataTemplate>
-						<iconPacks:PackIconFontAwesome Kind="AlignJustifySolid" />
-					</DataTemplate>
-				</MenuItem.HeaderTemplate>
+				<MenuItem.Header>
+					<Button>
+						<iconPacks:PackIconFontAwesome Kind="HeartRegular" />
+					</Button>
+				</MenuItem.Header>
+			</MenuItem>
+			<MenuItem>
+				<MenuItem.Header>
+					<ToggleButton IsChecked="{Binding ShowOutputMessages, Mode=TwoWay}">
+						<iconPacks:PackIconFontAwesome Kind="TableListSolid" />
+					</ToggleButton>					
+				</MenuItem.Header>
+			</MenuItem>
+			
+			<!-- Open -->
+			<MenuItem>
+				<MenuItem.Header>
+					<Button Command="{Binding OpenCommand}">
+						<iconPacks:PackIconFontAwesome Kind="FolderOpenRegular" />
+					</Button>
+				</MenuItem.Header>
+			</MenuItem>
+
+			<!-- Save -->
+			<MenuItem>
+				<MenuItem.Header>
+					<Button Command="{Binding SaveCommand}">
+						<iconPacks:PackIconFontAwesome Kind="FloppyDiskRegular" />
+					</Button>
+				</MenuItem.Header>
 			</MenuItem>
 		</Menu>
 
@@ -58,10 +83,8 @@
 
 		</TabControl>
 
-		<GridSplitter Grid.Row="1" VerticalAlignment="Bottom" BorderThickness="1" Height="3" Background="LightGray" />
-
 		<!-- Status Panel -->
-		<Border Grid.Row="2">
+		<Border Grid.Row="2" IsVisible="{Binding ShowOutputMessages}" Height="300">
 			<TabControl Background="White">
 
 				<TabControl.ContentTemplate>

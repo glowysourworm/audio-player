@@ -1,4 +1,7 @@
-﻿using AudioPlayer.Model.Command;
+﻿using System;
+using System.Runtime.Serialization;
+
+using AudioPlayer.Model.Command;
 
 using Avalonia.Controls;
 
@@ -6,7 +9,7 @@ using Avalonia.Platform.Storage;
 
 namespace AudioPlayer.Model
 {
-    public class LibraryConfiguration : ModelBase
+    public class LibraryConfiguration : ModelBase, ISerializable
     {
         string _directoryBase;
         ModelCommand _openLibraryFileCommand;
@@ -42,6 +45,15 @@ namespace AudioPlayer.Model
                     this.DirectoryBase = folders[0].Path.LocalPath;
                 }
             });
+        }
+
+        public LibraryConfiguration(SerializationInfo info, StreamingContext context)
+        {
+            this.DirectoryBase = (string)info.GetValue("DirectoryBase", typeof(string));
+        }
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("DirectoryBase", this.DirectoryBase);
         }
     }
 }
